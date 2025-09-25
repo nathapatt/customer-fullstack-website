@@ -29,11 +29,11 @@ const MenuPage = () => {
   const categories = ['เมนูขายดี', 'ข้าว', 'ก๋วยเตี๋ยว', 'น้ำ', 'ของหวาน'];
 
   const getCategoryForItem = (item: MenuItem) => {
-    if (item.name.includes('ข้าว')) return 'ข้าว';
+    if (item.name.includes('ข้าว') && !item.name.includes('ข้าวเหนียว')) return 'ข้าว';
     if (item.name.includes('ก๋วยเตี๋ยว')) return 'ก๋วยเตี๋ยว';
-    if (item.name.includes('น้ำ') || item.name.includes('เครื่องดื่ม')) return 'น้ำ';
+    if (item.name.includes('น้ำ') || item.name.includes('เครื่องดื่ม') || item.name.includes('ชา')) return 'น้ำ';
     if (item.name.includes('ของหวาน') || item.name.includes('ข้าวเหนียว') ||
-        item.name.includes('ทับทิม') || item.name.includes('โรตี')) return 'ของหวาน';
+        item.name.includes('ทับทิม') || item.name.includes('บิงซู')) return 'ของหวาน';
     return 'เมนูขายดี';
   };
 

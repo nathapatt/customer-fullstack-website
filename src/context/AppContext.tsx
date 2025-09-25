@@ -1,4 +1,19 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, type ReactNode } from 'react';
+import rarefish from '../assets/foods/rarefish.jpg';
+import noodle from '../assets/foods/noodle.jpg';
+import mangosticky from '../assets/foods/mangosticky.jpg';
+import thaitee from '../assets/foods/thaitee.jpg';
+import mangopun from '../assets/foods/mangopun.jpg';
+import freshcoco from '../assets/foods/freshcoco.jpg';
+import tubtim from '../assets/foods/tubtim.jpg';
+import hotnoodle from '../assets/foods/hotnoodle.jpg';
+import bingsu from '../assets/foods/bingsu.jpg';
+import porkegg from '../assets/foods/porkegg.jpg';
+import lengzaab from '../assets/foods/lengzaab.jpg';
+import fish from '../assets/foods/fish.jpg';
+import karee from '../assets/foods/karee.jpg';
+import mhookrob from '../assets/foods/mhookrob.jpg';
+import mhoodang from '../assets/foods/mhoodang.jpg';
 
 // Types
 interface MenuItem {
@@ -50,44 +65,44 @@ const initialState: AppState = {
     {
       id: 1,
       name: 'ข้าวหน้าปลาดิบ',
-      description: 'ราดด้วยซอสปลาและเครื่องเคียม',
+      description: 'ราดด้วยปลาหลากชนิดและไข่แซลมอน',
       price: 120,
-      image: 'https://images.unsplash.com/photo-1579952363873-27d3bfad9c0d?w=300'
+      image: rarefish
     },
     {
       id: 2,
-      name: 'ข้าวหน้าไข่ดองเนบ',
-      description: 'ราดด้วยซอสปลาและเครื่องเคียม',
+      name: 'ข้าวหน้าหมูไข่ดอง',
+      description: 'ข้าวหน้าหมูราดด้วยไข่ดองซีอิ๊ว',
       price: 110,
-      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300'
+      image: porkegg
     },
     {
       id: 3,
-      name: 'ข้าวหน้าปลาไหล จากเกาะออกไดโด หนึ่งด้วยบริมลิก',
-      description: 'ราดด้วยซอสปลาและเครื่องเคียม',
+      name: 'ข้าวหน้าปลาไหล',
+      description: 'ราดด้วยซอสหวาน คัดสันปลาไหลคุณภาพ',
       price: 149,
-      image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300'
+      image: fish
     },
     {
       id: 4,
-      name: 'ข้าวหน้าว่าฟัว',
-      description: 'ราดด้วยซอสปลาและเครื่องเคียม',
+      name: 'ข้าวพร้อมเล้งแซ่บ',
+      description: 'ซุปเล้งรสแซ่บ พร้อมข้าวสวยร้อนๆ',
       price: 110,
-      image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=300'
+      image: lengzaab
     },
     {
       id: 5,
-      name: 'ข้าวหน้าแกงปะ',
-      description: 'ราดด้วยซอสปลาและเครื่องเคียม',
+      name: 'ข้าวหน้าแกงกะหรี่',
+      description: 'ราดด้วยแกงกะหรี่ญี่ปุ่นเข้มข้น',
       price: 120,
-      image: 'https://images.unsplash.com/photo-1562967914-608f82629710?w=300'
+      image: karee
     },
     {
       id: 6,
-      name: 'ข้าวหน้าใส่ลิง',
+      name: 'ข้าวหมูกรอบพริกเกลือ',
       description: 'ราดด้วยซอสปลาและเครื่องเคียม',
       price: 120,
-      image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300'
+      image: mhookrob
     },
     // ก๋วยเตี๋ยว
     {
@@ -95,43 +110,43 @@ const initialState: AppState = {
       name: 'ก๋วยเตี๋ยวเนื้อน้ำใส',
       description: 'เส้นเล็กน้ำใสใส่เนื้อและลูกชิ้นเนื้อ',
       price: 45,
-      image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300'
+      image: noodle
     },
     {
       id: 8,
-      name: 'ก๋วยเตี๋ยวหมูแดงน้ำแดง',
-      description: 'เส้นใหญ่น้ำแดงใส่หมูแดงและเครื่องในหมู',
+      name: 'ก๋วยเตี๋ยวหมูแดง',
+      description: 'หมูแดงนุ่มๆ ราดด้วยน้ำซุปสูตรพิเศษ',
       price: 50,
-      image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300'
+      image: mhoodang
     },
     {
       id: 9,
-      name: 'ก๋วยเตี๋ยวต้มยำกุ้ง',
-      description: 'เส้นเล็กน้ำต้มยำใส่กุ้งและเห็ด',
+      name: 'ก๋วยเตี๋ยวต้มยำ',
+      description: 'เส้นเล็กน้ำต้มยำหมูสับและหมูนุ่มพร้อมไข่ออนเซน',
       price: 65,
-      image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300'
+      image: hotnoodle
     },
     // น้ำ
     {
       id: 10,
-      name: 'น้ำส้มคั้นสด',
-      description: 'น้ำส้มคั้นสดใหม่ 100%',
+      name: 'ชาไทยเย็น',
+      description: 'ชาไทยเข้มข้น หวานมัน ไม่ผสมสี',
       price: 25,
-      image: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=300'
+      image: thaitee
     },
     {
       id: 11,
       name: 'น้ำมะพร้าวสด',
       description: 'น้ำมะพร้าวสดจากลูกมะพร้าวอ่อน',
       price: 20,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300'
+      image: freshcoco
     },
     {
       id: 12,
       name: 'น้ำปั่นมะม่วง',
       description: 'น้ำปั่นมะม่วงสุกหวานเข้มข้น',
       price: 35,
-      image: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=300'
+      image: mangopun
     },
     // ของหวาน
     {
@@ -139,21 +154,21 @@ const initialState: AppState = {
       name: 'ข้าวเหนียวมะม่วง',
       description: 'ข้าวเหนียวหวานใส่มะม่วงสุกหวาน',
       price: 60,
-      image: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300'
+      image: mangosticky
     },
     {
       id: 14,
       name: 'ทับทิมกรอบ',
       description: 'ทับทิมกรอบใส่กะทิและน้ำแข็งไส',
       price: 40,
-      image: 'https://images.unsplash.com/photo-1563379091339-03246963d96c?w=300'
+      image: tubtim
     },
     {
       id: 15,
-      name: 'โรตีกล้วยหอม',
-      description: 'โรตีกรอบใส่กล้วยหอมและนมข้นหวาน',
-      price: 35,
-      image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300'
+      name: 'บิงซูรสสตอเบอร์รี่',
+      description: 'บิงซูเกล็ดหิมะรสนมใส่สตอเบอร์รี่และนมข้นหวาน',
+      price: 80,
+      image: bingsu
     }
   ]
 };
