@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, Heart, Plus, Minus } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppContext } from '../context/AppContext';
@@ -15,6 +15,11 @@ const FoodDetailPage = () => {
   const [selectedToppings, setSelectedToppings] = useState<{ id: string; name: string; price: number; quantity: number }[]>([]);
   const [note, setNote] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // Scroll to top immediately when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' }); // Instant scroll to top
+  }, []);
 
   // ข้อมูลอาหาร
   const foodItem = state.menuItems.find(item => item.id === parseInt(id || '1'));
@@ -62,7 +67,7 @@ const FoodDetailPage = () => {
   const totalPrice = foodItem.price * quantity;
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen">
+    <div className="max-w-md mx-auto bg-white min-h-screen animate-slideUpFromBottom">
       {/* Header Image */}
       <div className="relative">
         <img

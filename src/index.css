@@ -71,6 +71,15 @@
   }
 }
 
+@keyframes slideToRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
@@ -93,4 +102,8 @@
 
 .animate-slideDownToBottom {
   animation: slideDownToBottom 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-slideToRight {
+  animation: slideToRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
