@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronLeft, X, Plus, Minus, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
+import { orderService } from '../services/orderService';
 
 const OrderConfirmationPage = () => {
   const navigate = useNavigate();
@@ -9,6 +10,8 @@ const OrderConfirmationPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const updateQuantity = (itemId: number, change: number) => {
     const item = cart.find(item => item.id === itemId);
@@ -29,18 +32,36 @@ const OrderConfirmationPage = () => {
     }, 200);
   };
 
-  const handleConfirmOrder = () => {
-    setIsClosingModal(true);
-    setTimeout(() => {
-      setShowConfirmModal(false);
-      setIsClosingModal(false);
-      setOrderConfirmed(true);
-      // ส่งออเดอร์ไปครัว
-      setTimeout(() => {
-        clearCart();
-        navigate('/');
-      }, 3000);
-    }, 200);
+  const handleConfirmOrder = async () => {
+    setIsSubmittingOrder(true);
+    setOrderError(null);
+
+    try {
+      const result = await orderService.submitOrder({
+        tableId: 1, // You can get this from URL params or QR scan
+        items: cart
+      });
+
+      if (result.success) {
+        setIsClosingModal(true);
+        setTimeout(() => {
+          setShowConfirmModal(false);
+          setIsClosingModal(false);
+          setOrderConfirmed(true);
+          // Show success message and redirect
+          setTimeout(() => {
+            clearCart();
+            navigate('/');
+          }, 3000);
+        }, 200);
+      } else {
+        setOrderError(result.error || 'Failed to submit order');
+      }
+    } catch (error) {
+      setOrderError(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } finally {
+      setIsSubmittingOrder(false);
+    }
   };
 
   return (
@@ -174,6 +195,13 @@ const OrderConfirmationPage = () => {
               <p className="text-gray-600 text-sm mb-6">
                 คุณต้องการยืนยันการสั่งอาหารหรือไม่
               </p>
+
+              {/* Error Message */}
+              {orderError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-red-700 text-sm">{orderError}</p>
+                </div>
+              )}
               
               <div className="flex gap-3">
                 <button
@@ -184,9 +212,17 @@ const OrderConfirmationPage = () => {
                 </button>
                 <button
                   onClick={handleConfirmOrder}
-                  className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-lg font-medium transition-colors"
+                  disabled={isSubmittingOrder}
+                  className="flex-1 bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
                 >
-                  ยืนยัน
+                  {isSubmittingOrder ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>กำลังส่ง...</span>
+                    </div>
+                  ) : (
+                    'ยืนยัน'
+                  )}
                 </button>
               </div>
             </div>

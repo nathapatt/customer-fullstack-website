@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer, type ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+import { apiService, convertBackendMenuItemToFrontend } from '../services/api';
 import rarefish from '../assets/foods/rarefish.jpg';
 import noodle from '../assets/foods/noodle.jpg';
 import mangosticky from '../assets/foods/mangosticky.jpg';
@@ -42,6 +43,8 @@ interface AppState {
   cart: CartItem[];
   tableInfo: TableInfo;
   menuItems: MenuItem[];
+  loading: boolean;
+  error: string | null;
 }
 
 // Action Types
@@ -50,7 +53,34 @@ type AppAction =
   | { type: 'REMOVE_FROM_CART'; payload: number }
   | { type: 'UPDATE_CART_ITEM'; payload: { id: number; quantity: number } }
   | { type: 'CLEAR_CART' }
-  | { type: 'SET_TABLE_INFO'; payload: TableInfo };
+  | { type: 'SET_TABLE_INFO'; payload: TableInfo }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_MENU_ITEMS'; payload: MenuItem[] };
+
+// Image mapping for menu items
+const getImageForMenuItem = (id: number, name: string): string => {
+  // Create a mapping based on item name or ID
+  const imageMap: { [key: string]: string } = {
+    'ข้าวหน้าปลาดิบ': rarefish,
+    'ข้าวหน้าหมูไข่ดอง': porkegg,
+    'ข้าวหน้าปลาไหล': fish,
+    'ข้าวพร้อมเล้งแซ่บ': lengzaab,
+    'ข้าวหน้าแกงกะหรี่': karee,
+    'ข้าวหมูกรอบพริกเกลือ': mhookrob,
+    'ก๋วยเตี๋ยวเนื้อน้ำใส': noodle,
+    'ก๋วยเตี๋ยวหมูแดง': mhoodang,
+    'ก๋วยเตี๋ยวต้มยำ': hotnoodle,
+    'ชาไทยเย็น': thaitee,
+    'น้ำมะพร้าวสด': freshcoco,
+    'น้ำปั่นมะม่วง': mangopun,
+    'ข้าวเหนียวมะม่วง': mangosticky,
+    'ทับทิมกรอบ': tubtim,
+    'บิงซูรสสตอเบอร์รี่': bingsu,
+  };
+
+  return imageMap[name] || rarefish; // Use rarefish as default image
+};
 
 // Initial State
 const initialState: AppState = {
@@ -61,116 +91,9 @@ const initialState: AppState = {
     capacity: 4,
     shareUrl: "https://restaurant.com/table/A12"
   },
-  menuItems: [
-    {
-      id: 1,
-      name: 'ข้าวหน้าปลาดิบ',
-      description: 'ราดด้วยปลาหลากชนิดและไข่แซลมอน',
-      price: 120,
-      image: rarefish
-    },
-    {
-      id: 2,
-      name: 'ข้าวหน้าหมูไข่ดอง',
-      description: 'ข้าวหน้าหมูราดด้วยไข่ดองซีอิ๊ว',
-      price: 110,
-      image: porkegg
-    },
-    {
-      id: 3,
-      name: 'ข้าวหน้าปลาไหล',
-      description: 'ราดด้วยซอสหวาน คัดสันปลาไหลคุณภาพ',
-      price: 149,
-      image: fish
-    },
-    {
-      id: 4,
-      name: 'ข้าวพร้อมเล้งแซ่บ',
-      description: 'ซุปเล้งรสแซ่บ พร้อมข้าวสวยร้อนๆ',
-      price: 110,
-      image: lengzaab
-    },
-    {
-      id: 5,
-      name: 'ข้าวหน้าแกงกะหรี่',
-      description: 'ราดด้วยแกงกะหรี่ญี่ปุ่นเข้มข้น',
-      price: 120,
-      image: karee
-    },
-    {
-      id: 6,
-      name: 'ข้าวหมูกรอบพริกเกลือ',
-      description: 'ราดด้วยซอสปลาและเครื่องเคียม',
-      price: 120,
-      image: mhookrob
-    },
-    // ก๋วยเตี๋ยว
-    {
-      id: 7,
-      name: 'ก๋วยเตี๋ยวเนื้อน้ำใส',
-      description: 'เส้นเล็กน้ำใสใส่เนื้อและลูกชิ้นเนื้อ',
-      price: 45,
-      image: noodle
-    },
-    {
-      id: 8,
-      name: 'ก๋วยเตี๋ยวหมูแดง',
-      description: 'หมูแดงนุ่มๆ ราดด้วยน้ำซุปสูตรพิเศษ',
-      price: 50,
-      image: mhoodang
-    },
-    {
-      id: 9,
-      name: 'ก๋วยเตี๋ยวต้มยำ',
-      description: 'เส้นเล็กน้ำต้มยำหมูสับและหมูนุ่มพร้อมไข่ออนเซน',
-      price: 65,
-      image: hotnoodle
-    },
-    // น้ำ
-    {
-      id: 10,
-      name: 'ชาไทยเย็น',
-      description: 'ชาไทยเข้มข้น หวานมัน ไม่ผสมสี',
-      price: 25,
-      image: thaitee
-    },
-    {
-      id: 11,
-      name: 'น้ำมะพร้าวสด',
-      description: 'น้ำมะพร้าวสดจากลูกมะพร้าวอ่อน',
-      price: 20,
-      image: freshcoco
-    },
-    {
-      id: 12,
-      name: 'น้ำปั่นมะม่วง',
-      description: 'น้ำปั่นมะม่วงสุกหวานเข้มข้น',
-      price: 35,
-      image: mangopun
-    },
-    // ของหวาน
-    {
-      id: 13,
-      name: 'ข้าวเหนียวมะม่วง',
-      description: 'ข้าวเหนียวหวานใส่มะม่วงสุกหวาน',
-      price: 60,
-      image: mangosticky
-    },
-    {
-      id: 14,
-      name: 'ทับทิมกรอบ',
-      description: 'ทับทิมกรอบใส่กะทิและน้ำแข็งไส',
-      price: 40,
-      image: tubtim
-    },
-    {
-      id: 15,
-      name: 'บิงซูรสสตอเบอร์รี่',
-      description: 'บิงซูเกล็ดหิมะรสนมใส่สตอเบอร์รี่และนมข้นหวาน',
-      price: 80,
-      image: bingsu
-    }
-  ]
+  menuItems: [],
+  loading: false,
+  error: null
 };
 
 // Reducer
@@ -221,6 +144,24 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         tableInfo: action.payload
       };
 
+    case 'SET_LOADING':
+      return {
+        ...state,
+        loading: action.payload
+      };
+
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload
+      };
+
+    case 'SET_MENU_ITEMS':
+      return {
+        ...state,
+        menuItems: action.payload
+      };
+
     default:
       return state;
   }
@@ -235,6 +176,69 @@ const AppContext = createContext<{
 // Provider
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+
+  // Fetch menu items from backend on mount
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      try {
+        const backendMenuItems = await apiService.getMenuItems(true);
+
+        // Convert backend items to frontend format with images
+        const frontendMenuItems: MenuItem[] = backendMenuItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description || '',
+          price: item.price,
+          image: getImageForMenuItem(item.id, item.name)
+        }));
+
+        dispatch({ type: 'SET_MENU_ITEMS', payload: frontendMenuItems });
+      } catch (error) {
+        console.error('Failed to fetch menu items:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load menu items. Please check if the backend server is running.' });
+
+        // Fallback to mock data if backend is not available
+        const fallbackMenuItems: MenuItem[] = [
+          {
+            id: 1,
+            name: 'ข้าวหน้าปลาดิบ',
+            description: 'ราดด้วยปลาหลากชนิดและไข่แซลมอน',
+            price: 120,
+            image: rarefish
+          },
+          {
+            id: 7,
+            name: 'ก๋วยเตี๋ยวเนื้อน้ำใส',
+            description: 'เส้นเล็กน้ำใสใส่เนื้อและลูกชิ้นเนื้อ',
+            price: 45,
+            image: noodle
+          },
+          {
+            id: 10,
+            name: 'ชาไทยเย็น',
+            description: 'ชาไทยเข้มข้น หวานมัน ไม่ผสมสี',
+            price: 25,
+            image: thaitee
+          },
+          {
+            id: 13,
+            name: 'ข้าวเหนียวมะม่วง',
+            description: 'ข้าวเหนียวหวานใส่มะม่วงสุกหวาน',
+            price: 60,
+            image: mangosticky
+          }
+        ];
+        dispatch({ type: 'SET_MENU_ITEMS', payload: fallbackMenuItems });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

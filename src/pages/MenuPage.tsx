@@ -193,15 +193,33 @@ const MenuPage = () => {
         </div>
       )}
 
+      {/* Loading State */}
+      {state.loading && (
+        <div className="px-4 py-16 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p className="text-gray-500 text-lg">กำลังโหลดเมนู...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {state.error && !state.loading && (
+        <div className="px-4 py-16 text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-700 text-sm">{state.error}</p>
+            <p className="text-red-600 text-xs mt-2">กำลังใช้ข้อมูลตัวอย่าง</p>
+          </div>
+        </div>
+      )}
+
       {/* Empty Search Message */}
-      {searchQuery && filteredMenuItems.length === 0 && (
+      {searchQuery && filteredMenuItems.length === 0 && !state.loading && (
         <div className="px-4 py-16 text-center">
           <p className="text-gray-500 text-lg">ไม่พบรายการที่ท่านค้นหา</p>
         </div>
       )}
 
       {/* Menu Items - Grouped by Categories */}
-      {!searchQuery ? (
+      {!searchQuery && !state.loading ? (
         <div className="space-y-6">
           {Object.entries(groupedMenuItems).map(([category, items]) => (
             <div key={category} ref={sectionRefs[category as keyof typeof sectionRefs]}>
@@ -239,10 +257,11 @@ const MenuPage = () => {
                                 ฿ {item.price}
                               </span>
                             </div>
-                            <Link
-                              to={`/food/${item.id}`}
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
+                                window.location.href = `/food/${item.id}`;
                               }}
                               className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                             >
@@ -251,7 +270,7 @@ const MenuPage = () => {
                               ) : (
                                 <Plus className="w-4 h-4" />
                               )}
-                            </Link>
+                            </button>
                           </div>
                         </div>
                       </Link>
@@ -264,7 +283,7 @@ const MenuPage = () => {
         </div>
       ) : (
         /* Search Results */
-        filteredMenuItems.length > 0 && (
+        filteredMenuItems.length > 0 && !state.loading && (
           <div className="bg-white">
             <div className="divide-y divide-gray-100">
               {filteredMenuItems.map(item => (
@@ -293,10 +312,11 @@ const MenuPage = () => {
                             ฿ {item.price}
                           </span>
                         </div>
-                        <Link
-                          to={`/food/${item.id}`}
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            e.preventDefault();
+                            window.location.href = `/food/${item.id}`;
                           }}
                           className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                         >
@@ -305,7 +325,7 @@ const MenuPage = () => {
                           ) : (
                             <Plus className="w-4 h-4" />
                           )}
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   </Link>
