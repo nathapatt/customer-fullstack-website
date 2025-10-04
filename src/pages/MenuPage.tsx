@@ -28,12 +28,30 @@ const MenuPage = () => {
 
   const categories = ['เมนูขายดี', 'ข้าว', 'ก๋วยเตี๋ยว', 'น้ำ', 'ของหวาน'];
 
-  const getCategoryForItem = (item: MenuItem) => {
-    if (item.name.includes('ข้าว') && !item.name.includes('ข้าวเหนียว')) return 'ข้าว';
-    if (item.name.includes('ก๋วยเตี๋ยว')) return 'ก๋วยเตี๋ยว';
-    if (item.name.includes('น้ำ') || item.name.includes('เครื่องดื่ม') || item.name.includes('ชา')) return 'น้ำ';
-    if (item.name.includes('ของหวาน') || item.name.includes('ข้าวเหนียว') ||
-        item.name.includes('ทับทิม') || item.name.includes('บิงซู')) return 'ของหวาน';
+  const getCategoryForItem = (item: any) => {
+    // Use foodtype from backend data if available
+    if (item.foodtype) {
+      switch (item.foodtype) {
+        case 'Main Course':
+          return 'ข้าว';
+        case 'Noodle':
+          return 'ก๋วยเตี๋ยว';
+        case 'Beverage':
+          return 'น้ำ';
+        case 'Dessert':
+          return 'ของหวาน';
+        default:
+          return 'เมนูขายดี';
+      }
+    }
+
+    // Fallback to name-based categorization for backward compatibility
+    const name = item.name.toLowerCase();
+    if (name.includes('curry') || name.includes('stir fry') || name.includes('pad thai')) return 'ข้าว';
+    if (name.includes('soup') && !name.includes('dessert')) return 'ก๋วยเตี๋ยว';
+    if (name.includes('tea') || name.includes('drink') || name.includes('beverage')) return 'น้ำ';
+    if (name.includes('mango sticky rice') || name.includes('dessert') || name.includes('sweet')) return 'ของหวาน';
+
     return 'เมนูขายดี';
   };
 
@@ -49,8 +67,8 @@ const MenuPage = () => {
       )
     : state.menuItems; // Show all items when not searching
 
-  // Popular menu items (specific 4 items)
-  const popularItemIds = [1, 7, 10, 13]; // ข้าวหน้าปลาดิบ, ก๋วยเตี๋ยวเนื้อน้ำใส, น้ำส้มคั้นสด, ข้าวเหนียวมะม่วง
+  // Popular menu items (use actual backend IDs)
+  const popularItemIds = [1, 2, 5, 6]; // Pad Thai, Tom Yum Noodles, Mango Sticky Rice, Thai Iced Tea
 
   // Group items by category
   const groupedMenuItems = categories.reduce((acc, category) => {

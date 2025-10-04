@@ -10,13 +10,11 @@ export interface OrderSubmissionData {
 export class OrderService {
   // Convert cart items to backend format
   private convertCartItemsToBackendFormat(cartItems: CartItem[]) {
-    const converted = cartItems.map(item => ({
+    return cartItems.map(item => ({
       menuItemId: item.id,
       quantity: item.quantity,
       note: item.note || undefined // Use undefined instead of null for optional fields
     }));
-    console.log('Converted cart items:', JSON.stringify(converted, null, 2));
-    return converted;
   }
 
   // Submit order to backend
@@ -30,8 +28,6 @@ export class OrderService {
         sessionId: orderData.sessionId,
         items: this.convertCartItemsToBackendFormat(orderData.items)
       };
-
-      console.log('Sending order data:', JSON.stringify(backendOrderData, null, 2));
 
       const result = await apiService.createOrder(backendOrderData);
 

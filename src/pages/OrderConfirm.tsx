@@ -3,10 +3,12 @@ import { ChevronLeft, X, Plus, Minus, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { orderService } from '../services/orderService';
+import { useSession } from '../context/SessionContext';
 
 const OrderConfirmationPage = () => {
   const navigate = useNavigate();
   const { cart, cartCount, cartTotal, updateCartItem, removeFromCart, clearCart } = useCart();
+  const { sessionId, sessionData } = useSession();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
@@ -38,7 +40,8 @@ const OrderConfirmationPage = () => {
 
     try {
       const result = await orderService.submitOrder({
-        tableId: 1, // You can get this from URL params or QR scan
+        tableId: sessionData?.tableId || 1, // Use tableId from session
+        sessionId: sessionId || undefined, // Use current session ID
         items: cart
       });
 

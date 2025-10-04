@@ -23,6 +23,7 @@ interface MenuItem {
   description: string;
   price: number;
   image: string;
+  foodtype?: string;
 }
 
 interface CartItem extends MenuItem {
@@ -60,8 +61,26 @@ type AppAction =
 
 // Image mapping for menu items
 const getImageForMenuItem = (id: number, name: string): string => {
-  // Create a mapping based on item name or ID
+  // Create a mapping based on item name or ID - updated to match backend English names
   const imageMap: { [key: string]: string } = {
+    // Map current backend names to appropriate images
+    'Pad Thai': noodle,
+    'Tom Yum Noodles': hotnoodle,
+    'Curry Rice': karee,
+    'Mango Sticky Rice': mangosticky,
+    'Thai Iced Tea': thaitee,
+    'Massaman Curry': mhookrob,
+    'Thai Basil Stir Fry': fish,
+    'Coconut Water': freshcoco,
+
+    // Old names for backward compatibility
+    'Tom Yum Soup': hotnoodle,
+    'Green Curry': karee,
+    'Som Tam': lengzaab,
+    'Spring Rolls': porkegg,
+    'Coconut Soup': freshcoco,
+
+    // Keep Thai names for backwards compatibility (if any are still used)
     'ข้าวหน้าปลาดิบ': rarefish,
     'ข้าวหน้าหมูไข่ดอง': porkegg,
     'ข้าวหน้าปลาไหล': fish,
@@ -192,7 +211,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           name: item.name,
           description: item.description || '',
           price: item.price,
-          image: getImageForMenuItem(item.id, item.name)
+          image: getImageForMenuItem(item.id, item.name),
+          foodtype: item.foodtype
         }));
 
         dispatch({ type: 'SET_MENU_ITEMS', payload: frontendMenuItems });
@@ -200,35 +220,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         console.error('Failed to fetch menu items:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Failed to load menu items. Please check if the backend server is running.' });
 
-        // Fallback to mock data if backend is not available
+        // Fallback to sample data if backend is not available
         const fallbackMenuItems: MenuItem[] = [
           {
             id: 1,
-            name: 'ข้าวหน้าปลาดิบ',
-            description: 'ราดด้วยปลาหลากชนิดและไข่แซลมอน',
-            price: 120,
-            image: rarefish
+            name: 'Pad Thai',
+            description: 'Traditional Thai stir-fried noodles',
+            price: 12.99,
+            image: noodle,
+            foodtype: 'Main Course'
           },
           {
-            id: 7,
-            name: 'ก๋วยเตี๋ยวเนื้อน้ำใส',
-            description: 'เส้นเล็กน้ำใสใส่เนื้อและลูกชิ้นเนื้อ',
-            price: 45,
-            image: noodle
+            id: 2,
+            name: 'Tom Yum Noodles',
+            description: 'Spicy and sour noodle soup',
+            price: 8.99,
+            image: hotnoodle,
+            foodtype: 'Noodle'
           },
           {
-            id: 10,
-            name: 'ชาไทยเย็น',
-            description: 'ชาไทยเข้มข้น หวานมัน ไม่ผสมสี',
-            price: 25,
-            image: thaitee
+            id: 5,
+            name: 'Mango Sticky Rice',
+            description: 'Sweet coconut sticky rice with fresh mango',
+            price: 6.99,
+            image: mangosticky,
+            foodtype: 'Dessert'
           },
           {
-            id: 13,
-            name: 'ข้าวเหนียวมะม่วง',
-            description: 'ข้าวเหนียวหวานใส่มะม่วงสุกหวาน',
-            price: 60,
-            image: mangosticky
+            id: 6,
+            name: 'Thai Iced Tea',
+            description: 'Traditional Thai iced tea with condensed milk',
+            price: 3.99,
+            image: thaitee,
+            foodtype: 'Beverage'
           }
         ];
         dispatch({ type: 'SET_MENU_ITEMS', payload: fallbackMenuItems });
