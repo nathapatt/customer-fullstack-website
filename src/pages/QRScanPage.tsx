@@ -13,6 +13,7 @@ const QRScanPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [tableInfo, setTableInfo] = useState<any>(null);
   const [sessionMessage, setSessionMessage] = useState<string>('');
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   useEffect(() => {
     const createSession = async () => {
@@ -22,7 +23,14 @@ const QRScanPage = () => {
         return;
       }
 
+      // Prevent multiple simultaneous session creation calls
+      if (isCreatingSession) {
+        return;
+      }
+
       try {
+        setIsCreatingSession(true);
+
         // Clear any previous session first
         localStorage.removeItem('sessionId');
         localStorage.removeItem('sessionData');
@@ -66,6 +74,8 @@ const QRScanPage = () => {
         console.error('Failed to create session:', err);
         setError('Failed to join table. Please try scanning again.');
         setLoading(false);
+      } finally {
+        setIsCreatingSession(false);
       }
     };
 
