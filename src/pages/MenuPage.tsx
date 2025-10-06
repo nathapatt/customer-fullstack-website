@@ -1,11 +1,12 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, Menu, ShoppingCart, Users, QrCode, X, Copy, Check, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAppContext, type MenuItem } from '../context/AppContext';
 import { useCart } from '../hooks/useCart';
+import QRCode from 'qrcode';
 
 const MenuPage = () => {
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const { cart, cartCount, cartTotal, addToCart } = useCart();
   const [showCart, setShowCart] = useState(false);
   const [isClosingCart, setIsClosingCart] = useState(false);
@@ -16,6 +17,7 @@ const MenuPage = () => {
   const [activeTab, setActiveTab] = useState('เมนูขายดี');
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [isClosingOrderHistory, setIsClosingOrderHistory] = useState(false);
+  const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
 
   // Refs for scrolling to sections
   const sectionRefs = {
@@ -32,6 +34,15 @@ const MenuPage = () => {
     // Use foodtype from backend data if available
     if (item.foodtype) {
       switch (item.foodtype) {
+        case 'RICE':
+          return 'ข้าว';
+        case 'NOODLE':
+          return 'ก๋วยเตี๋ยว';
+        case 'DRINK':
+          return 'น้ำ';
+        case 'DESSERT':
+          return 'ของหวาน';
+        // Legacy support for old names
         case 'Main Course':
           return 'ข้าว';
         case 'Noodle':
@@ -47,10 +58,10 @@ const MenuPage = () => {
 
     // Fallback to name-based categorization for backward compatibility
     const name = item.name.toLowerCase();
-    if (name.includes('curry') || name.includes('stir fry') || name.includes('pad thai')) return 'ข้าว';
-    if (name.includes('soup') && !name.includes('dessert')) return 'ก๋วยเตี๋ยว';
-    if (name.includes('tea') || name.includes('drink') || name.includes('beverage')) return 'น้ำ';
-    if (name.includes('mango sticky rice') || name.includes('dessert') || name.includes('sweet')) return 'ของหวาน';
+    if (name.includes('curry') || name.includes('stir fry') || name.includes('rice') || name.includes('ข้าว')) return 'ข้าว';
+    if (name.includes('noodle') || name.includes('soup') || name.includes('ก๋วยเตี๋ยว')) return 'ก๋วยเตี๋ยว';
+    if (name.includes('tea') || name.includes('drink') || name.includes('beverage') || name.includes('water') || name.includes('น้ำ')) return 'น้ำ';
+    if (name.includes('mango') || name.includes('dessert') || name.includes('sweet') || name.includes('ice cream') || name.includes('ของหวาน')) return 'ของหวาน';
 
     return 'เมนูขายดี';
   };
@@ -67,8 +78,8 @@ const MenuPage = () => {
       )
     : state.menuItems; // Show all items when not searching
 
-  // Popular menu items (use actual backend IDs)
-  const popularItemIds = [1, 2, 5, 6]; // Pad Thai, Tom Yum Noodles, Mango Sticky Rice, Thai Iced Tea
+  // Popular menu items (one from each category)
+  const popularItemIds = [1, 6, 10, 14]; // Thai Basil Pork Rice, Pad Thai, Thai Iced Tea, Mango Sticky Rice
 
   // Group items by category
   const groupedMenuItems = categories.reduce((acc, category) => {
@@ -108,6 +119,41 @@ const MenuPage = () => {
       total: 110
     }
   ];
+
+  // Generate QR Code for the table URL
+  const generateQRCode = async (url: string) => {
+    try {
+      const qrDataURL = await QRCode.toDataURL(url, {
+        width: 192,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      setQrCodeDataURL(qrDataURL);
+    } catch (error) {
+      console.error('Failed to generate QR code:', error);
+    }
+  };
+
+  // Generate QR code when component mounts or table info changes
+  useEffect(() => {
+    if (state.tableInfo.shareUrl) {
+      generateQRCode(state.tableInfo.shareUrl);
+    }
+  }, [state.tableInfo.shareUrl]);
+
+  // Demo function to switch tables (for testing QR codes)
+  const switchToTable = (tableNumber: string) => {
+    const tableInfo = {
+      number: tableNumber,
+      restaurant: "ครัวคุณยาย",
+      capacity: 4,
+      shareUrl: `${window.location.origin}/scan/table-${tableNumber}-token-${Math.random().toString(36).substr(2, 9)}`
+    };
+    dispatch({ type: 'SET_TABLE_INFO', payload: tableInfo });
+  };
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(state.tableInfo.shareUrl);
@@ -495,24 +541,45 @@ const MenuPage = () => {
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 สั่งร่วมกับเพื่อน
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-4">
                 ให้เพื่อนสแกนเพื่อสั่งร่วมกัน โต๊ะ {state.tableInfo.number}
               </p>
+
+              {/* Demo Table Selector */}
+              <div className="bg-blue-50 rounded-lg p-3 mb-6">
+                <p className="text-xs text-blue-600 mb-2 font-medium">Demo: Switch Tables</p>
+                <div className="flex gap-2 flex-wrap">
+                  {['A-1', 'A-2', 'B-5', 'C-10'].map(tableNum => (
+                    <button
+                      key={tableNum}
+                      onClick={() => switchToTable(tableNum)}
+                      className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                        state.tableInfo.number === tableNum
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-100'
+                      }`}
+                    >
+                      {tableNum}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* QR Code Display */}
               <div className="bg-gray-100 rounded-2xl p-8 mb-6">
                 <div className="w-48 h-48 bg-white rounded-xl mx-auto flex items-center justify-center border-2 border-dashed border-gray-300">
-                  {/* Mock QR Code */}
-                  <div className="grid grid-cols-8 gap-1">
-                    {Array.from({ length: 64 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 h-2 ${
-                          Math.random() > 0.5 ? 'bg-black' : 'bg-white'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  {qrCodeDataURL ? (
+                    <img
+                      src={qrCodeDataURL}
+                      alt={`QR Code for Table ${state.tableInfo.number}`}
+                      className="w-44 h-44 rounded-lg"
+                    />
+                  ) : (
+                    <div className="text-gray-500 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto mb-2"></div>
+                      <span className="text-sm">Generating QR Code...</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

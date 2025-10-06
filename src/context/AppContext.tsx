@@ -63,17 +63,37 @@ type AppAction =
 const getImageForMenuItem = (id: number, name: string): string => {
   // Create a mapping based on item name or ID - updated to match backend English names
   const imageMap: { [key: string]: string } = {
-    // Map current backend names to appropriate images
+    // RICE Category
+    'Thai Basil Pork Rice': fish,
+    'Green Curry Rice': karee,
+    'Massaman Curry Rice': mhookrob,
+    'Crispy Pork Rice': porkegg,
+    'Rare Fish Rice Bowl': rarefish,
+
+    // NOODLE Category
     'Pad Thai': noodle,
+    'Tom Yum Noodle Soup': hotnoodle,
+    'Red Pork Noodles': mhoodang,
+    'Clear Beef Noodle Soup': noodle,
+
+    // DRINK Category
+    'Thai Iced Tea': thaitee,
+    'Fresh Coconut Water': freshcoco,
+    'Mango Smoothie': mangopun,
+    'Lemon Iced Tea': lengzaab,
+
+    // DESSERT Category
+    'Mango Sticky Rice': mangosticky,
+    'Tub Tim Grob': tubtim,
+    'Strawberry Bingsu': bingsu,
+    'Thai Coconut Ice Cream': freshcoco,
+
+    // Legacy mappings for backward compatibility
     'Tom Yum Noodles': hotnoodle,
     'Curry Rice': karee,
-    'Mango Sticky Rice': mangosticky,
-    'Thai Iced Tea': thaitee,
     'Massaman Curry': mhookrob,
     'Thai Basil Stir Fry': fish,
     'Coconut Water': freshcoco,
-
-    // Old names for backward compatibility
     'Tom Yum Soup': hotnoodle,
     'Green Curry': karee,
     'Som Tam': lengzaab,
@@ -108,7 +128,7 @@ const initialState: AppState = {
     number: "A-12",
     restaurant: "ครัวคุณยาย",
     capacity: 4,
-    shareUrl: "https://restaurant.com/table/A12"
+    shareUrl: `${window.location.origin}/scan/table-A12-token-abc123`
   },
   menuItems: [],
   loading: false,
@@ -220,39 +240,150 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         console.error('Failed to fetch menu items:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Failed to load menu items. Please check if the backend server is running.' });
 
-        // Fallback to sample data if backend is not available
+        // Fallback to comprehensive sample data if backend is not available
         const fallbackMenuItems: MenuItem[] = [
+          // RICE Category
           {
             id: 1,
-            name: 'Pad Thai',
-            description: 'Traditional Thai stir-fried noodles',
-            price: 12.99,
-            image: noodle,
-            foodtype: 'Main Course'
+            name: 'Thai Basil Pork Rice',
+            description: 'Stir-fried pork with Thai basil served over jasmine rice',
+            price: 89,
+            image: fish,
+            foodtype: 'RICE'
           },
           {
             id: 2,
-            name: 'Tom Yum Noodles',
-            description: 'Spicy and sour noodle soup',
-            price: 8.99,
-            image: hotnoodle,
-            foodtype: 'Noodle'
+            name: 'Green Curry Rice',
+            description: 'Traditional Thai green curry with chicken and jasmine rice',
+            price: 95,
+            image: karee,
+            foodtype: 'RICE'
+          },
+          {
+            id: 3,
+            name: 'Massaman Curry Rice',
+            description: 'Rich and creamy massaman curry with beef and rice',
+            price: 105,
+            image: mhookrob,
+            foodtype: 'RICE'
+          },
+          {
+            id: 4,
+            name: 'Crispy Pork Rice',
+            description: 'Crispy pork belly with chili salt over steamed rice',
+            price: 85,
+            image: porkegg,
+            foodtype: 'RICE'
           },
           {
             id: 5,
-            name: 'Mango Sticky Rice',
-            description: 'Sweet coconut sticky rice with fresh mango',
-            price: 6.99,
-            image: mangosticky,
-            foodtype: 'Dessert'
+            name: 'Rare Fish Rice Bowl',
+            description: 'Fresh sashimi-style fish over seasoned rice',
+            price: 120,
+            image: rarefish,
+            foodtype: 'RICE'
           },
+
+          // NOODLE Category
           {
             id: 6,
+            name: 'Pad Thai',
+            description: 'Traditional Thai stir-fried rice noodles with shrimp',
+            price: 75,
+            image: noodle,
+            foodtype: 'NOODLE'
+          },
+          {
+            id: 7,
+            name: 'Tom Yum Noodle Soup',
+            description: 'Spicy and sour noodle soup with pork and shrimp',
+            price: 65,
+            image: hotnoodle,
+            foodtype: 'NOODLE'
+          },
+          {
+            id: 8,
+            name: 'Red Pork Noodles',
+            description: 'Chinese-style noodles with BBQ red pork',
+            price: 70,
+            image: mhoodang,
+            foodtype: 'NOODLE'
+          },
+          {
+            id: 9,
+            name: 'Clear Beef Noodle Soup',
+            description: 'Light and clear beef noodle soup with herbs',
+            price: 80,
+            image: noodle,
+            foodtype: 'NOODLE'
+          },
+
+          // DRINK Category
+          {
+            id: 10,
             name: 'Thai Iced Tea',
             description: 'Traditional Thai iced tea with condensed milk',
-            price: 3.99,
+            price: 35,
             image: thaitee,
-            foodtype: 'Beverage'
+            foodtype: 'DRINK'
+          },
+          {
+            id: 11,
+            name: 'Fresh Coconut Water',
+            description: 'Young coconut water served fresh from the shell',
+            price: 40,
+            image: freshcoco,
+            foodtype: 'DRINK'
+          },
+          {
+            id: 12,
+            name: 'Mango Smoothie',
+            description: 'Fresh mango blended with ice and milk',
+            price: 50,
+            image: mangopun,
+            foodtype: 'DRINK'
+          },
+          {
+            id: 13,
+            name: 'Lemon Iced Tea',
+            description: 'Refreshing iced tea with fresh lemon and mint',
+            price: 30,
+            image: lengzaab,
+            foodtype: 'DRINK'
+          },
+
+          // DESSERT Category
+          {
+            id: 14,
+            name: 'Mango Sticky Rice',
+            description: 'Sweet coconut sticky rice with fresh mango slices',
+            price: 55,
+            image: mangosticky,
+            foodtype: 'DESSERT'
+          },
+          {
+            id: 15,
+            name: 'Tub Tim Grob',
+            description: 'Water chestnuts in coconut milk with crushed ice',
+            price: 45,
+            image: tubtim,
+            foodtype: 'DESSERT'
+          },
+          {
+            id: 16,
+            name: 'Strawberry Bingsu',
+            description: 'Korean-style shaved ice with strawberry and condensed milk',
+            price: 65,
+            image: bingsu,
+            foodtype: 'DESSERT'
+          },
+          {
+            id: 17,
+            name: 'Thai Coconut Ice Cream',
+            description: 'Homemade coconut ice cream with toppings',
+            price: 40,
+            image: freshcoco,
+            foodtype: 'DESSERT'
           }
         ];
         dispatch({ type: 'SET_MENU_ITEMS', payload: fallbackMenuItems });
