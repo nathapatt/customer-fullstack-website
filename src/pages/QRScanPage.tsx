@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAppContext } from '../context/AppContext';
+import { useSession } from '../context/SessionContext';
 
 const QRScanPage = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { dispatch } = useAppContext();
+  const { setSession } = useSession();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tableInfo, setTableInfo] = useState<any>(null);
+  const [sessionMessage, setSessionMessage] = useState<string>('');
 
   useEffect(() => {
     const createSession = async () => {
@@ -20,12 +23,18 @@ const QRScanPage = () => {
       }
 
       try {
-        // Create session from QR token
+        // Clear any previous session first
+        localStorage.removeItem('sessionId');
+        localStorage.removeItem('sessionData');
+
+        // Create or join session from QR token
         const session = await apiService.createSession(token);
 
-        // Store session info
-        localStorage.setItem('sessionId', session.id);
-        localStorage.setItem('sessionData', JSON.stringify(session));
+        // Store session info in localStorage and update context
+        setSession(session.id, session);
+
+        // Set the session message for user feedback
+        setSessionMessage(session.message || 'Session created successfully');
 
         // Get table info for display
         const tables = await apiService.getTables();
@@ -61,7 +70,7 @@ const QRScanPage = () => {
     };
 
     createSession();
-  }, [token, navigate, dispatch]);
+  }, [token, navigate, dispatch, setSession]);
 
   if (loading) {
     return (
@@ -106,7 +115,31 @@ const QRScanPage = () => {
           </svg>
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">เข้าร่วมโต๊ะสำเร็จ!</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-3">
+          {sessionMessage.includes('Joined') ? 'เข้าร่วมโต๊ะสำเร็จ!' : 'เข้าร่วมโต๊ะสำเร็จ!'}
+        </h2>
+
+        {sessionMessage && (
+          <div className={`rounded-lg p-3 mb-4 ${
+            sessionMessage.includes('Joined')
+              ? 'bg-blue-50 border border-blue-200'
+              : sessionMessage.includes('expired')
+              ? 'bg-orange-50 border border-orange-200'
+              : 'bg-green-50 border border-green-200'
+          }`}>
+            <p className={`text-sm font-medium ${
+              sessionMessage.includes('Joined')
+                ? 'text-blue-700'
+                : sessionMessage.includes('expired')
+                ? 'text-orange-700'
+                : 'text-green-700'
+            }`}>
+              {sessionMessage.includes('Joined') && '👥 คุณได้เข้าร่วมโต๊ะที่มีผู้อื่นสั่งอาหารอยู่แล้ว'}
+              {sessionMessage.includes('expired') && '⏰ เซสชันเก่าหมดอายุแล้ว สร้างเซสชันใหม่'}
+              {sessionMessage.includes('New session created') && '✨ สร้างเซสชันใหม่สำเร็จ'}
+            </p>
+          </div>
+        )}
 
         {tableInfo && (
           <div className="bg-white rounded-lg p-4 mb-4 shadow-sm">

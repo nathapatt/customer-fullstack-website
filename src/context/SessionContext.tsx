@@ -14,6 +14,7 @@ interface SessionContextType {
   hasValidSession: boolean;
   clearSession: () => void;
   setSession: (sessionId: string, sessionData: SessionData) => void;
+  reloadSession: () => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -22,8 +23,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
 
-  // Load session from localStorage on mount
-  useEffect(() => {
+  // Function to load session from localStorage
+  const loadSessionFromStorage = () => {
     const storedSessionId = localStorage.getItem('sessionId');
     const storedSessionData = localStorage.getItem('sessionData');
 
@@ -46,7 +47,16 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         console.error('Failed to parse session data:', error);
         clearSession();
       }
+    } else {
+      // No session data, clear state
+      setSessionId(null);
+      setSessionData(null);
     }
+  };
+
+  // Load session from localStorage on mount
+  useEffect(() => {
+    loadSessionFromStorage();
   }, []);
 
   const setSession = (newSessionId: string, newSessionData: SessionData) => {
@@ -63,6 +73,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     localStorage.removeItem('sessionData');
   };
 
+  const reloadSession = () => {
+    loadSessionFromStorage();
+  };
+
   const hasValidSession = sessionId !== null && sessionData !== null;
 
   return (
@@ -72,7 +86,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         sessionData,
         hasValidSession,
         clearSession,
-        setSession
+        setSession,
+        reloadSession
       }}
     >
       {children}

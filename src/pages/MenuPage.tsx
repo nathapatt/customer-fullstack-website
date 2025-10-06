@@ -3,11 +3,14 @@ import { Search, Bell, Menu, ShoppingCart, Users, QrCode, X, Copy, Check, Plus }
 import { Link } from 'react-router-dom';
 import { useAppContext, type MenuItem } from '../context/AppContext';
 import { useCart } from '../hooks/useCart';
+import { useSession } from '../context/SessionContext';
+import { apiService, type BackendOrder } from '../services/api';
 import QRCode from 'qrcode';
 
 const MenuPage = () => {
   const { state, dispatch } = useAppContext();
   const { cart, cartCount, cartTotal, addToCart } = useCart();
+  const { sessionId } = useSession();
   const [showCart, setShowCart] = useState(false);
   const [isClosingCart, setIsClosingCart] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -18,6 +21,8 @@ const MenuPage = () => {
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [isClosingOrderHistory, setIsClosingOrderHistory] = useState(false);
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
+  const [orderHistory, setOrderHistory] = useState<BackendOrder[]>([]);
+  const [loadingOrderHistory, setLoadingOrderHistory] = useState(false);
 
   // Refs for scrolling to sections
   const sectionRefs = {
@@ -97,28 +102,28 @@ const MenuPage = () => {
     return acc;
   }, {} as Record<string, MenuItem[]>);
 
-  // Sample order history data
-  const orderHistory = [
-    {
-      id: 1,
-      orderTime: '14:30',
-      status: 'กำลังทำ',
-      items: [
-        { name: 'ข้าวหน้าปลาดิบ', quantity: 2, price: 120 },
-        { name: 'ข้าวหน้าไข่ดองเนบ', quantity: 1, price: 110 }
-      ],
-      total: 350
-    },
-    {
-      id: 2,
-      orderTime: '13:45',
-      status: 'เสร็จแล้ว',
-      items: [
-        { name: 'ข้าวหน้าว่าฟัว', quantity: 1, price: 110 }
-      ],
-      total: 110
+  // Load order history when session ID changes or when opening order history
+  const loadOrderHistory = async () => {
+    if (!sessionId) return;
+
+    setLoadingOrderHistory(true);
+    try {
+      const orders = await apiService.getSessionOrders(sessionId);
+      setOrderHistory(orders);
+    } catch (error) {
+      console.error('Failed to load order history:', error);
+      setOrderHistory([]);
+    } finally {
+      setLoadingOrderHistory(false);
     }
-  ];
+  };
+
+  // Load order history when component mounts or session changes
+  useEffect(() => {
+    if (sessionId) {
+      loadOrderHistory();
+    }
+  }, [sessionId]);
 
   // Generate QR Code for the table URL
   const generateQRCode = async (url: string) => {
@@ -207,7 +212,10 @@ const MenuPage = () => {
               <Users className="w-4 h-4" />
               <span className="text-sm font-medium">สั่งกับเพื่อน</span>
             </button>
-            <button onClick={() => setShowOrderHistory(true)}>
+            <button onClick={() => {
+              setShowOrderHistory(true);
+              loadOrderHistory(); // Refresh order history when opening
+            }}>
               <Bell className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors" />
             </button>
           </div>
@@ -642,47 +650,88 @@ const MenuPage = () => {
             </div>
 
             <div className="p-4 max-h-96 overflow-y-auto">
-              {orderHistory.length > 0 ? (
+              {loadingOrderHistory ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+                  <p className="text-gray-500">กำลังโหลดประวัติการสั่งอาหาร...</p>
+                </div>
+              ) : orderHistory.length > 0 ? (
                 <div className="space-y-4">
-                  {orderHistory.map(order => (
-                    <div key={order.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-900">
-                            ออเดอร์ #{order.id}
-                          </span>
-                          <span className="text-sm text-gray-500">{order.orderTime}</span>
-                        </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          order.status === 'เสร็จแล้ว'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-orange-100 text-orange-700'
-                        }`}>
-                          {order.status}
-                        </span>
-                      </div>
+                  {orderHistory.map(order => {
+                    // Calculate total for this order
+                    const orderTotal = order.orderItems.reduce((total, item) => {
+                      return total + (item.menuItem.price * item.quantity);
+                    }, 0);
 
-                      <div className="space-y-2 mb-3">
-                        {order.items.map((item, index) => (
-                          <div key={index} className="flex justify-between text-sm">
-                            <span className="text-gray-700">
-                              {item.name} x{item.quantity}
+                    // Convert status to Thai
+                    const getStatusText = (status: string) => {
+                      switch (status) {
+                        case 'PENDING': return 'รอดำเนินการ';
+                        case 'IN_PROGRESS': return 'กำลังทำ';
+                        case 'DONE': return 'เสร็จแล้ว';
+                        case 'CANCELLED': return 'ยกเลิก';
+                        default: return status;
+                      }
+                    };
+
+                    const getStatusColor = (status: string) => {
+                      switch (status) {
+                        case 'DONE': return 'bg-green-100 text-green-700';
+                        case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
+                        case 'PENDING': return 'bg-orange-100 text-orange-700';
+                        case 'CANCELLED': return 'bg-red-100 text-red-700';
+                        default: return 'bg-gray-100 text-gray-700';
+                      }
+                    };
+
+                    return (
+                      <div key={order.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">
+                              ออเดอร์ #{order.id}
                             </span>
-                            <span className="text-gray-900 font-medium">
-                              ฿{item.price * item.quantity}
+                            <span className="text-sm text-gray-500">
+                              {new Date(order.createdAt).toLocaleTimeString('th-TH', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
                             </span>
                           </div>
-                        ))}
-                      </div>
+                          <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
+                            {getStatusText(order.status)}
+                          </span>
+                        </div>
 
-                      <div className="border-t border-gray-100 pt-2">
-                        <div className="flex justify-between font-semibold">
-                          <span>รวม</span>
-                          <span>฿{order.total}</span>
+                        <div className="space-y-2 mb-3">
+                          {order.orderItems.map((item) => (
+                            <div key={item.id} className="flex justify-between text-sm">
+                              <div className="flex-1">
+                                <span className="text-gray-700">
+                                  {item.menuItem.name} x{item.quantity}
+                                </span>
+                                {item.note && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    หมายเหตุ: {item.note}
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-gray-900 font-medium">
+                                ฿{(item.menuItem.price * item.quantity).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="border-t border-gray-100 pt-2">
+                          <div className="flex justify-between font-semibold">
+                            <span>รวม</span>
+                            <span>฿{orderTotal.toFixed(2)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-gray-500 text-center py-8">ยังไม่มีประวัติการสั่งอาหาร</p>
