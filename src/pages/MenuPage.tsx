@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, Menu, ShoppingCart, Users, QrCode, X, Copy, Check, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAppContext, type MenuItem } from '../context/AppContext';
+import { useAppContext, getImageForMenuItem, type MenuItem } from '../context/AppContext';
 import { useCart } from '../hooks/useCart';
 import { useSession } from '../context/SessionContext';
 import { apiService, type BackendOrder } from '../services/api';
@@ -312,6 +312,13 @@ const MenuPage = () => {
                             src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                              // Fallback to local image if Cloudinary URL fails
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== getImageForMenuItem(item.id, item.name)) {
+                                target.src = getImageForMenuItem(item.id, item.name);
+                              }
+                            }}
                           />
                         </div>
 
@@ -367,6 +374,13 @@ const MenuPage = () => {
                         src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          // Fallback to local image if Cloudinary URL fails
+                          const target = e.target as HTMLImageElement;
+                          if (target.src !== getImageForMenuItem(item.id, item.name)) {
+                            target.src = getImageForMenuItem(item.id, item.name);
+                          }
+                        }}
                       />
                     </div>
 

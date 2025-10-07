@@ -231,7 +231,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           name: item.name,
           description: item.description || '',
           price: item.price,
-          image: getImageForMenuItem(item.id, item.name),
+          image: item.photoUrl || getImageForMenuItem(item.id, item.name), // Use Cloudinary URL if available, fallback to local
           foodtype: item.foodtype
         }));
 
@@ -413,3 +413,6 @@ export const useAppContext = () => {
 
 // Export types for use in other components
 export type { MenuItem, CartItem, TableInfo };
+
+// Export helper function
+export { getImageForMenuItem };

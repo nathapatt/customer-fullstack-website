@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, Heart, Plus, Minus } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAppContext } from '../context/AppContext';
+import { useAppContext, getImageForMenuItem } from '../context/AppContext';
 import { useCart } from '../hooks/useCart';
 
 const FoodDetailPage = () => {
@@ -74,6 +74,13 @@ const FoodDetailPage = () => {
           src={foodItem.image}
           alt={foodItem.name}
           className="w-full h-64 object-cover"
+          onError={(e) => {
+            // Fallback to local image if Cloudinary URL fails
+            const target = e.target as HTMLImageElement;
+            if (target.src !== getImageForMenuItem(foodItem.id, foodItem.name)) {
+              target.src = getImageForMenuItem(foodItem.id, foodItem.name);
+            }
+          }}
         />
 
         {/* Back Button */}

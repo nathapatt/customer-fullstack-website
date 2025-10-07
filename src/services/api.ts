@@ -9,6 +9,8 @@ export interface BackendMenuItem {
   description: string | null;
   foodtype: string | null;
   isAvailable: boolean;
+  photoUrl?: string | null;
+  photoId?: string | null;
 }
 
 export interface BackendOrder {
