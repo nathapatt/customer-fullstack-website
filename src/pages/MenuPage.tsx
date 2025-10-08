@@ -567,26 +567,6 @@ const MenuPage = () => {
                 ให้เพื่อนสแกนเพื่อสั่งร่วมกัน โต๊ะ {state.tableInfo.number}
               </p>
 
-              {/* Demo Table Selector */}
-              <div className="bg-blue-50 rounded-lg p-3 mb-6">
-                <p className="text-xs text-blue-600 mb-2 font-medium">Demo: Switch Tables</p>
-                <div className="flex gap-2 flex-wrap">
-                  {['A-1', 'A-2', 'B-5', 'C-10'].map(tableNum => (
-                    <button
-                      key={tableNum}
-                      onClick={() => switchToTable(tableNum)}
-                      className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                        state.tableInfo.number === tableNum
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-100'
-                      }`}
-                    >
-                      {tableNum}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* QR Code Display */}
               <div className="bg-gray-100 rounded-2xl p-8 mb-6">
                 <div className="w-48 h-48 bg-white rounded-xl mx-auto flex items-center justify-center border-2 border-dashed border-gray-300">
