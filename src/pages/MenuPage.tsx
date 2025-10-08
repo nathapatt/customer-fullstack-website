@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, Menu, ShoppingCart, Users, QrCode, X, Copy, Check, Plus } from 'lucide-react';
+import { Search, Bell, Menu, ShoppingCart, Users, QrCode, X, Copy, Check, Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAppContext, getImageForMenuItem, type MenuItem } from '../context/AppContext';
 import { useCart } from '../hooks/useCart';
@@ -9,7 +9,7 @@ import QRCode from 'qrcode';
 
 const MenuPage = () => {
   const { state, dispatch } = useAppContext();
-  const { cart, cartCount, cartTotal, addToCart } = useCart();
+  const { cart, cartCount, cartTotal, addToCart, updateCartItem } = useCart();
   const { sessionId } = useSession();
   const [showCart, setShowCart] = useState(false);
   const [isClosingCart, setIsClosingCart] = useState(false);
@@ -336,25 +336,55 @@ const MenuPage = () => {
                                 ฿ {item.price}
                               </span>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                const cartItem = {
-                                  ...item,
-                                  quantity: 1,
-                                  note: ''
-                                };
-                                addToCart(cartItem);
-                              }}
-                              className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                            >
-                              {getItemQuantityInCart(item.id) > 0 ? (
-                                <span className="text-sm font-bold">{getItemQuantityInCart(item.id)}</span>
-                              ) : (
+                            {getItemQuantityInCart(item.id) > 0 ? (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    const currentQty = getItemQuantityInCart(item.id);
+                                    if (currentQty > 1) {
+                                      updateCartItem(item.id, currentQty - 1);
+                                    } else {
+                                      updateCartItem(item.id, 0); // This will remove the item
+                                    }
+                                  }}
+                                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="text-sm font-bold min-w-[1rem] text-center">
+                                  {getItemQuantityInCart(item.id)}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    const currentQty = getItemQuantityInCart(item.id);
+                                    updateCartItem(item.id, currentQty + 1);
+                                  }}
+                                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  const cartItem = {
+                                    ...item,
+                                    quantity: 1,
+                                    note: ''
+                                  };
+                                  addToCart(cartItem);
+                                }}
+                                className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                              >
                                 <Plus className="w-4 h-4" />
-                              )}
-                            </button>
+                              </button>
+                            )}
                           </div>
                         </div>
                       </Link>
@@ -403,25 +433,55 @@ const MenuPage = () => {
                             ฿ {item.price}
                           </span>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            const cartItem = {
-                              ...item,
-                              quantity: 1,
-                              note: ''
-                            };
-                            addToCart(cartItem);
-                          }}
-                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                        >
-                          {getItemQuantityInCart(item.id) > 0 ? (
-                            <span className="text-sm font-bold">{getItemQuantityInCart(item.id)}</span>
-                          ) : (
+                        {getItemQuantityInCart(item.id) > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                const currentQty = getItemQuantityInCart(item.id);
+                                if (currentQty > 1) {
+                                  updateCartItem(item.id, currentQty - 1);
+                                } else {
+                                  updateCartItem(item.id, 0); // This will remove the item
+                                }
+                              }}
+                              className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-sm font-bold min-w-[1rem] text-center">
+                              {getItemQuantityInCart(item.id)}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                const currentQty = getItemQuantityInCart(item.id);
+                                updateCartItem(item.id, currentQty + 1);
+                              }}
+                              className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              const cartItem = {
+                                ...item,
+                                quantity: 1,
+                                note: ''
+                              };
+                              addToCart(cartItem);
+                            }}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                          >
                             <Plus className="w-4 h-4" />
-                          )}
-                        </button>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </Link>
