@@ -60,10 +60,13 @@ const FoodDetailPage = () => {
       <div className="px-4 py-4">
         {/* Food Info */}
         <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {foodItem.name}
           </h1>
-          <p className="text-2xl font-bold text-gray-900">฿ {foodItem.price}</p>
+          <p className="text-base text-gray-600 mb-2">
+            {foodItem.description}
+          </p>
+          <p className="text-lg font-bold text-gray-900">฿ {foodItem.price}</p>
         </div>
 
         {/* Note Section */}
