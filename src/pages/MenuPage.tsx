@@ -340,7 +340,12 @@ const MenuPage = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                window.location.href = `/food/${item.id}`;
+                                const cartItem = {
+                                  ...item,
+                                  quantity: 1,
+                                  note: ''
+                                };
+                                addToCart(cartItem);
                               }}
                               className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                             >
@@ -402,7 +407,12 @@ const MenuPage = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            window.location.href = `/food/${item.id}`;
+                            const cartItem = {
+                              ...item,
+                              quantity: 1,
+                              note: ''
+                            };
+                            addToCart(cartItem);
                           }}
                           className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                         >
