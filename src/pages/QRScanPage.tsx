@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import { useSession } from '../context/SessionContext';
+import { cookieUtils } from '../utils/cookies';
 
 const QRScanPage = () => {
   const { token } = useParams<{ token: string }>();
@@ -32,13 +33,13 @@ const QRScanPage = () => {
         setIsCreatingSession(true);
 
         // Clear any previous session first
-        localStorage.removeItem('sessionId');
-        localStorage.removeItem('sessionData');
+        cookieUtils.session.clearSession();
+        cookieUtils.deleteCookie('customer_session_data');
 
         // Create or join session from QR token
         const session = await apiService.createSession(token);
 
-        // Store session info in localStorage and update context
+        // Store session info in cookies and update context
         setSession(session.id, session);
 
         // Set the session message for user feedback

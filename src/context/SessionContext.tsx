@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { cookieUtils } from '../utils/cookies';
 
 interface SessionData {
   id: string;
@@ -23,10 +24,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
 
-  // Function to load session from localStorage
+  // Function to load session from cookies
   const loadSessionFromStorage = () => {
-    const storedSessionId = localStorage.getItem('sessionId');
-    const storedSessionData = localStorage.getItem('sessionData');
+    const storedSessionId = cookieUtils.session.getSessionId();
+    const storedSessionData = cookieUtils.getCookie('customer_session_data');
 
     if (storedSessionId && storedSessionData) {
       try {
@@ -54,7 +55,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Load session from localStorage on mount
+  // Load session from cookies on mount
   useEffect(() => {
     loadSessionFromStorage();
   }, []);
@@ -62,15 +63,15 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const setSession = (newSessionId: string, newSessionData: SessionData) => {
     setSessionId(newSessionId);
     setSessionData(newSessionData);
-    localStorage.setItem('sessionId', newSessionId);
-    localStorage.setItem('sessionData', JSON.stringify(newSessionData));
+    cookieUtils.session.setSessionId(newSessionId);
+    cookieUtils.setCookie('customer_session_data', JSON.stringify(newSessionData), 1);
   };
 
   const clearSession = () => {
     setSessionId(null);
     setSessionData(null);
-    localStorage.removeItem('sessionId');
-    localStorage.removeItem('sessionData');
+    cookieUtils.session.clearSession();
+    cookieUtils.deleteCookie('customer_session_data');
   };
 
   const reloadSession = () => {
