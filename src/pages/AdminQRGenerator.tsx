@@ -32,7 +32,8 @@ const AdminQRGenerator = () => {
 
   const generateQRCode = async (tableId: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/tables/${tableId}/qr`);
+      const apiBaseUrl = import.meta.env.VITE_API_PROXY_PATH || '/api';
+      const response = await fetch(`${apiBaseUrl}/tables/${tableId}/qr`);
       const qrData = await response.json();
       setSelectedTable(qrData);
     } catch (error) {
