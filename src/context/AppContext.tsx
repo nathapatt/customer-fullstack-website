@@ -139,12 +139,15 @@ const initialState: AppState = {
 const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
     case 'ADD_TO_CART':
-      { const existingItem = state.cart.find(item => item.id === action.payload.id);
+      { const existingItem = state.cart.find(item =>
+          item.id === action.payload.id &&
+          item.note === action.payload.note // Also match by note to treat items with different notes as separate items
+        );
       if (existingItem) {
         return {
           ...state,
           cart: state.cart.map(item =>
-            item.id === action.payload.id
+            item.id === action.payload.id && item.note === action.payload.note
               ? { ...item, quantity: item.quantity + action.payload.quantity }
               : item
           )
