@@ -4,13 +4,15 @@ import { Link } from 'react-router-dom';
 import { useAppContext, getImageForMenuItem, type MenuItem } from '../context/AppContext';
 import { useCart } from '../hooks/useCart';
 import { useSession } from '../context/SessionContext';
+import { useSocket } from '../contexts/SocketContext';
 import { apiService, type BackendOrder } from '../services/api';
 import QRCode from 'qrcode';
 
 const MenuPage = () => {
   const { state, dispatch } = useAppContext();
   const { cart, cartCount, cartTotal, addToCart, updateCartItem } = useCart();
-  const { sessionId } = useSession();
+  const { sessionId, sessionData } = useSession();
+  const { joinTable, connected } = useSocket();
   const [showCart, setShowCart] = useState(false);
   const [isClosingCart, setIsClosingCart] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -125,6 +127,51 @@ const MenuPage = () => {
     }
   }, [sessionId]);
 
+  // Join table room for real-time updates
+  useEffect(() => {
+    if (sessionData?.tableId && sessionId) {
+      console.log('Joining table room:', sessionData.tableId, 'with session:', sessionId);
+      joinTable(sessionData.tableId, sessionId);
+    }
+  }, [sessionData?.tableId, sessionId, joinTable]);
+
+  // Listen for real-time order status updates
+  useEffect(() => {
+    const handleOrderCreated = (event: CustomEvent) => {
+      console.log('🆕 New order created:', event.detail);
+      // Reload order history to show the new order
+      if (sessionId) {
+        loadOrderHistory();
+      }
+    };
+
+    const handleOrderStatusUpdated = (event: CustomEvent) => {
+      console.log('📋 Order status updated:', event.detail);
+      const updatedOrderData = event.detail;
+
+      // Update the specific order in orderHistory state
+      setOrderHistory(prev => prev.map(order => {
+        if (order.id === updatedOrderData.orderId || order.id === updatedOrderData.id) {
+          return {
+            ...order,
+            status: updatedOrderData.status
+          };
+        }
+        return order;
+      }));
+    };
+
+    // Add event listeners
+    window.addEventListener('orderCreated', handleOrderCreated as EventListener);
+    window.addEventListener('orderStatusUpdated', handleOrderStatusUpdated as EventListener);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('orderCreated', handleOrderCreated as EventListener);
+      window.removeEventListener('orderStatusUpdated', handleOrderStatusUpdated as EventListener);
+    };
+  }, [sessionId]);
+
   // Generate QR Code for the table URL
   const generateQRCode = async (url: string) => {
     try {
@@ -212,11 +259,18 @@ const MenuPage = () => {
               <Users className="w-4 h-4" />
               <span className="text-sm font-medium">สั่งกับเพื่อน</span>
             </button>
-            <button onClick={() => {
-              setShowOrderHistory(true);
-              loadOrderHistory(); // Refresh order history when opening
-            }}>
+            <button
+              onClick={() => {
+                setShowOrderHistory(true);
+                loadOrderHistory(); // Refresh order history when opening
+              }}
+              className="relative"
+            >
               <Bell className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors" />
+              {/* WebSocket connection indicator */}
+              <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                connected ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
             </button>
           </div>
         </div>
@@ -703,7 +757,17 @@ const MenuPage = () => {
           >
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">ประวัติการสั่งอาหาร</h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold text-gray-900">ประวัติการสั่งอาหาร</h3>
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                    connected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${
+                      connected ? 'bg-green-500' : 'bg-red-500'
+                    }`}></div>
+                    <span>{connected ? 'เชื่อมต่อแล้ว' : 'ขาดการเชื่อมต่อ'}</span>
+                  </div>
+                </div>
                 <button
                   onClick={handleCloseOrderHistory}
                   className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"

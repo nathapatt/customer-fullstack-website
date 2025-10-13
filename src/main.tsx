@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AppProvider } from './context/AppContext.tsx'
 import { SessionProvider } from './context/SessionContext.tsx'
+import { SocketProvider } from './contexts/SocketContext.tsx'
 import './index.css'
 import MenuPage from './pages/MenuPage.tsx'
 import FoodDetailPage from './pages/Details.tsx'
@@ -16,30 +17,32 @@ import AdminQRGenerator from './pages/AdminQRGenerator.tsx'
 
 createRoot(document.getElementById('root')!).render(
     <SessionProvider>
-      <AppProvider>
-        <Router>
-          <Routes>
-            <Route path="/scan/:token" element={<QRScanPage />} />
-            <Route path="/session-required" element={<SessionRequired />} />
-            <Route path="/admin/qr" element={<AdminQRGenerator />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <MenuPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/food/:id" element={
-              <ProtectedRoute>
-                <FoodDetailPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/cart" element={
-              <ProtectedRoute>
-                <OrderConfirmationPage />
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </Router>
-      </AppProvider>
+      <SocketProvider>
+        <AppProvider>
+          <Router>
+            <Routes>
+              <Route path="/scan/:token" element={<QRScanPage />} />
+              <Route path="/session-required" element={<SessionRequired />} />
+              <Route path="/admin/qr" element={<AdminQRGenerator />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <MenuPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/food/:id" element={
+                <ProtectedRoute>
+                  <FoodDetailPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/cart" element={
+                <ProtectedRoute>
+                  <OrderConfirmationPage />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </Router>
+        </AppProvider>
+      </SocketProvider>
     </SessionProvider>
   ,
 )
