@@ -48,10 +48,7 @@ const AdminQRGenerator = () => {
       const qrDataURL = await QRCode.toDataURL(url, {
         width: 256,
         margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+        color: { dark: '#000000', light: '#FFFFFF' }
       });
       setQrCodeDataURL(qrDataURL);
     } catch (error) {
@@ -69,8 +66,8 @@ const AdminQRGenerator = () => {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Loading tables...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-400 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading tables...</p>
         </div>
       </div>
     );
@@ -78,7 +75,8 @@ const AdminQRGenerator = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      {/* Removed outside border; soft card feel */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">QR Code Generator for Tables</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -89,12 +87,12 @@ const AdminQRGenerator = () => {
               {tables.map((table) => (
                 <div
                   key={table.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                   onClick={() => generateQRCode(table.id)}
+                  className="rounded-xl p-4 bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all shadow-sm"
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <h3 className="font-medium">Table A-{table.tableNumber}</h3>
+                      <h3 className="font-medium text-gray-900">Table A-{table.tableNumber}</h3>
                       <p className="text-sm text-gray-600">Capacity: {table.capacity} seats</p>
                       <p className="text-xs text-gray-500 font-mono">{table.qrCodeToken}</p>
                     </div>
@@ -103,7 +101,7 @@ const AdminQRGenerator = () => {
                         e.stopPropagation();
                         generateQRCode(table.id);
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                      className="px-4 py-2 rounded-full text-sm font-medium text-white bg-sky-400 hover:bg-sky-500 active:scale-[.98] transition"
                     >
                       Generate QR
                     </button>
@@ -119,38 +117,38 @@ const AdminQRGenerator = () => {
             {selectedTable ? (
               <div className="text-center">
                 {qrCodeDataURL ? (
-                  <div className="qr-code bg-white p-4 border-2 border-gray-300 rounded-lg inline-block">
+                  <div className="inline-block bg-white p-4 rounded-2xl shadow">
                     <img
                       src={qrCodeDataURL}
                       alt={`QR Code for Table ${selectedTable.tableNumber}`}
-                      className="w-64 h-64"
+                      className="w-64 h-64 rounded-lg"
                     />
                     <div className="text-center mt-2 text-xs text-gray-600">
                       Table A-{selectedTable?.tableNumber}
                     </div>
                   </div>
                 ) : (
-                  <div className="w-64 h-64 bg-gray-100 flex items-center justify-center rounded-lg">
+                  <div className="w-64 h-64 bg-gray-100 flex items-center justify-center rounded-2xl shadow mx-auto">
                     <div className="text-gray-500">Generating QR Code...</div>
                   </div>
                 )}
 
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <div className="mt-4 p-4 bg-gray-50 rounded-2xl">
                   <h3 className="font-medium text-gray-900 mb-2">Table Information</h3>
                   <p className="text-sm text-gray-600">Table: A-{selectedTable.tableNumber}</p>
                   <p className="text-sm text-gray-600">Capacity: {selectedTable.capacity} seats</p>
                   <p className="text-xs text-gray-500 font-mono break-all mt-2">{selectedTable.url}</p>
                 </div>
 
+                {/* Cute color buttons */}
                 <div className="mt-4 space-y-2">
                   <button
-                    onClick={() => {
-                      window.open(selectedTable.url, '_blank');
-                    }}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors"
+                    onClick={() => window.open(selectedTable.url, '_blank')}
+                    className="w-full py-2 rounded-full font-medium text-white bg-emerald-400 hover:bg-emerald-500 transition"
                   >
                     Test QR Code
                   </button>
+
                   <button
                     onClick={() => {
                       const link = document.createElement('a');
@@ -158,28 +156,48 @@ const AdminQRGenerator = () => {
                       link.href = qrCodeDataURL;
                       link.click();
                     }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors"
                     disabled={!qrCodeDataURL}
+                    className={`w-full py-2 rounded-full font-medium text-white transition ${
+                      qrCodeDataURL
+                        ? 'bg-sky-400 hover:bg-sky-500'
+                        : 'bg-sky-300 cursor-not-allowed'
+                    }`}
                   >
                     Download QR Code
                   </button>
+
                   <button
-                    onClick={() => {
-                      window.print();
-                    }}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors"
+                    onClick={() => window.print()}
+                    className="w-full py-2 rounded-full font-medium text-white bg-violet-400 hover:bg-violet-500 transition"
                   >
                     Print QR Code
                   </button>
+
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(selectedTable.url);
-                      alert('URL copied to clipboard!');
+                      // keep it simple; no alert – soft feedback with opacity pulse
+                      const el = document.getElementById('copy-pulse');
+                      if (el) {
+                        el.classList.remove('opacity-0');
+                        el.classList.add('opacity-100');
+                        setTimeout(() => {
+                          el.classList.add('opacity-0');
+                        }, 1200);
+                      }
                     }}
-                    className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors"
+                    className="w-full py-2 rounded-full font-medium text-white bg-rose-400 hover:bg-rose-500 transition"
                   >
                     Copy URL
                   </button>
+
+                  {/* tiny non-intrusive copied hint */}
+                  <div
+                    id="copy-pulse"
+                    className="opacity-0 transition-opacity text-xs text-gray-500 text-center"
+                  >
+                    Copied!
+                  </div>
                 </div>
               </div>
             ) : (
@@ -188,16 +206,6 @@ const AdminQRGenerator = () => {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-medium text-blue-900 mb-2">How it works:</h3>
-          <ol className="text-sm text-blue-800 space-y-1">
-            <li>1. Print the QR code and place it on the table</li>
-            <li>2. Customers scan the QR code to join the table session</li>
-            <li>3. Multiple customers can scan the same QR code to share orders</li>
-            <li>4. Orders are linked to the table and session</li>
-          </ol>
         </div>
       </div>
     </div>

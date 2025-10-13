@@ -244,7 +244,7 @@ const MenuPage = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A7</span>
+              <span className="text-white font-bold text-lg">A</span>
             </div>
             <div>
               <h1 className="font-semibold text-gray-900">โต๊ะ {state.tableInfo.number}</h1>
@@ -268,9 +268,9 @@ const MenuPage = () => {
             >
               <Bell className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors" />
               {/* WebSocket connection indicator */}
-              <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+              {/* <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
                 connected ? 'bg-green-500' : 'bg-red-500'
-              }`}></div>
+              }`}></div> */}
             </button>
           </div>
         </div>
