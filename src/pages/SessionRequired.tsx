@@ -40,17 +40,6 @@ const SessionRequired = () => {
             </div>
           </div>
         </div>
-
-        {/* Demo QR for testing */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <p className="text-xs text-gray-500 mb-2">สำหรับทดสอบ (โต๊ะ A-1):</p>
-          <a
-            href="/scan/table-1-token-9pqeb34e064"
-            className="inline-block bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-          >
-            คลิกเพื่อทดสอบ
-          </a>
-        </div>
       </div>
     </div>
   );
