@@ -125,6 +125,15 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  // Auto-join table when session is available and socket is connected
+  useEffect(() => {
+    if (socket && sessionData?.tableId && sessionId) {
+      // Join the table to receive table-specific socket events
+      socket.emit('join_table', { tableId: sessionData.tableId, sessionId });
+      console.log(`Joined table ${sessionData.tableId} for session ${sessionId}`);
+    }
+  }, [socket, sessionData?.tableId, sessionId]);
+
   // Load session from cookies on mount
   useEffect(() => {
     loadSessionFromStorage();
@@ -135,8 +144,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (!socket) return;
 
     const handleSessionEnded = (data: any) => {
+      console.log('Received session_ended event:', data);
       // If the ended session matches our current session, clear it
-      if (data.id === sessionId || (sessionData && data.tableId === sessionData.tableId)) {
+      if (data.sessionId === sessionId || (sessionData && data.tableId === sessionData.tableId)) {
+        console.log('Clearing session due to session_ended event');
         clearSession();
         // Show notification to user
         if ('Notification' in window && Notification.permission === 'granted') {
