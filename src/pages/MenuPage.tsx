@@ -192,16 +192,6 @@ const MenuPage = () => {
     }
   }, [state.tableInfo.shareUrl]);
 
-  // Demo function to switch tables (for testing QR codes)
-  const switchToTable = (tableNumber: string) => {
-    const tableInfo = {
-      number: tableNumber,
-      restaurant: "ครัวคุณยาย",
-      capacity: 4,
-      shareUrl: `${window.location.origin}/scan/table-${tableNumber}-token-${Math.random().toString(36).substr(2, 9)}`
-    };
-    dispatch({ type: 'SET_TABLE_INFO', payload: tableInfo });
-  };
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(state.tableInfo.shareUrl);
