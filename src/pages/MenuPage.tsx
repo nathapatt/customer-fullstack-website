@@ -753,17 +753,7 @@ const MenuPage = () => {
           >
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-semibold text-gray-900">ประวัติการสั่งอาหาร</h3>
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                    connected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}>
-                    <div className={`w-2 h-2 rounded-full ${
-                      connected ? 'bg-green-500' : 'bg-red-500'
-                    }`}></div>
-                    <span>{connected ? 'เชื่อมต่อแล้ว' : 'ขาดการเชื่อมต่อ'}</span>
-                  </div>
-                </div>
+                <h3 className="text-lg font-semibold text-gray-900">ประวัติการสั่งอาหาร</h3>
                 <button
                   onClick={handleCloseOrderHistory}
                   className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -780,83 +770,106 @@ const MenuPage = () => {
                   <p className="text-gray-500">กำลังโหลดประวัติการสั่งอาหาร...</p>
                 </div>
               ) : orderHistory.length > 0 ? (
-                <div className="space-y-4">
-                  {orderHistory.map(order => {
-                    // Calculate total for this order
-                    const orderTotal = order.orderItems.reduce((total, item) => {
-                      return total + (item.menuItem.price * item.quantity);
-                    }, 0);
+                <>
+                  <div className="space-y-4">
+                    {orderHistory.map(order => {
+                      // Calculate total for this order
+                      const orderTotal = order.orderItems.reduce((total, item) => {
+                        return total + (item.menuItem.price * item.quantity);
+                      }, 0);
 
-                    // Convert status to Thai
-                    const getStatusText = (status: string) => {
-                      switch (status) {
-                        case 'PENDING': return 'รอดำเนินการ';
-                        case 'IN_PROGRESS': return 'กำลังทำ';
-                        case 'DONE': return 'เสร็จแล้ว';
-                        case 'CANCELLED': return 'ยกเลิก';
-                        default: return status;
-                      }
-                    };
+                      // Convert status to Thai
+                      const getStatusText = (status: string) => {
+                        switch (status) {
+                          case 'PENDING': return 'รอดำเนินการ';
+                          case 'IN_PROGRESS': return 'กำลังทำ';
+                          case 'DONE': return 'เสร็จแล้ว';
+                          case 'CANCELLED': return 'ยกเลิก';
+                          default: return status;
+                        }
+                      };
 
-                    const getStatusColor = (status: string) => {
-                      switch (status) {
-                        case 'DONE': return 'bg-green-100 text-green-700';
-                        case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
-                        case 'PENDING': return 'bg-orange-100 text-orange-700';
-                        case 'CANCELLED': return 'bg-red-100 text-red-700';
-                        default: return 'bg-gray-100 text-gray-700';
-                      }
-                    };
+                      const getStatusColor = (status: string) => {
+                        switch (status) {
+                          case 'DONE': return 'bg-green-100 text-green-700';
+                          case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
+                          case 'PENDING': return 'bg-orange-100 text-orange-700';
+                          case 'CANCELLED': return 'bg-red-100 text-red-700';
+                          default: return 'bg-gray-100 text-gray-700';
+                        }
+                      };
 
-                    return (
-                      <div key={order.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900">
-                              ออเดอร์ #{order.id}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {new Date(order.createdAt).toLocaleTimeString('th-TH', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                          <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
-                            {getStatusText(order.status)}
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 mb-3">
-                          {order.orderItems.map((item) => (
-                            <div key={item.id} className="flex justify-between text-sm">
-                              <div className="flex-1">
-                                <span className="text-gray-700">
-                                  {item.menuItem.name} x{item.quantity}
-                                </span>
-                                {item.note && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    หมายเหตุ: {item.note}
-                                  </div>
-                                )}
-                              </div>
-                              <span className="text-gray-900 font-medium">
-                                ฿{(item.menuItem.price * item.quantity).toFixed(2)}
+                      return (
+                        <div key={order.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                ออเดอร์ #{order.id}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                {new Date(order.createdAt).toLocaleTimeString('th-TH', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
                               </span>
                             </div>
-                          ))}
-                        </div>
+                            <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
+                              {getStatusText(order.status)}
+                            </span>
+                          </div>
 
-                        <div className="border-t border-gray-100 pt-2">
-                          <div className="flex justify-between font-semibold">
-                            <span>รวม</span>
-                            <span>฿{orderTotal.toFixed(2)}</span>
+                          <div className="space-y-2 mb-3">
+                            {order.orderItems.map((item) => (
+                              <div key={item.id} className="flex justify-between text-sm">
+                                <div className="flex-1">
+                                  <span className="text-gray-700">
+                                    {item.menuItem.name} x{item.quantity}
+                                  </span>
+                                  {item.note && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      หมายเหตุ: {item.note}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-gray-900 font-medium">
+                                  ฿{(item.menuItem.price * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="border-t border-gray-100 pt-2">
+                            <div className="flex justify-between font-semibold">
+                              <span>รวม</span>
+                              <span>฿{orderTotal.toFixed(2)}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Grand Total Section */}
+                  <div className="mt-6 bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold text-cyan-900">
+                        ยอดรวมทั้งหมด
+                      </span>
+                      <span className="text-xl font-bold text-cyan-900">
+                        ฿{orderHistory.reduce((grandTotal, order) => {
+                          const orderTotal = order.orderItems.reduce((total, item) => {
+                            return total + (item.menuItem.price * item.quantity);
+                          }, 0);
+                          return grandTotal + orderTotal;
+                        }, 0).toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-cyan-700 mt-1">
+                      จากทั้งหมด {orderHistory.length} ออเดอร์
+                    </p>
+                  </div>
+                </>
+
               ) : (
                 <p className="text-gray-500 text-center py-8">ยังไม่มีประวัติการสั่งอาหาร</p>
               )}
