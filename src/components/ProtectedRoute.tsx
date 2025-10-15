@@ -1,15 +1,32 @@
 import { Navigate } from 'react-router-dom';
 import { useSession } from '../context/SessionContext';
+import { useEffect, useRef } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { hasValidSession, loading } = useSession(); // 1. ดึงค่า loading มาจาก Context
+  const { hasValidSession, loading, validateWithBackend } = useSession();
+  const validationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Periodic validation of session with backend
+  useEffect(() => {
+    if (!hasValidSession) return;
+
+    // Set up periodic validation every 2 minutes (not immediately to avoid loop)
+    validationIntervalRef.current = setInterval(() => {
+      validateWithBackend();
+    }, 2 * 60 * 1000); // 2 minutes
+
+    return () => {
+      if (validationIntervalRef.current) {
+        clearInterval(validationIntervalRef.current);
+      }
+    };
+  }, [hasValidSession]); // Remove validateWithBackend from dependencies
 
   if (loading) {
-    // 2. ถ้ากำลังโหลด ให้แสดงหน้า loading ชั่วคราว
     return (
       <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -21,11 +38,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!hasValidSession) {
-    // 3. ถ้าโหลดเสร็จแล้ว และไม่มี session ให้ redirect
     return <Navigate to="/session-required" replace />;
   }
 
-  // 4. ถ้าโหลดเสร็จแล้ว และมี session ให้แสดงหน้าเว็บตามปกติ
   return <>{children}</>;
 };
 

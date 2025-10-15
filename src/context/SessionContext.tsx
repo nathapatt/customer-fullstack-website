@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { cookieUtils } from '../utils/cookies';
+import { useSocket } from '../contexts/SocketContext';
 
 interface SessionData {
   id: string;
@@ -13,10 +14,11 @@ interface SessionContextType {
   sessionId: string | null;
   sessionData: SessionData | null;
   hasValidSession: boolean;
-  loading: boolean; // เพิ่ม state loading
+  loading: boolean;
   clearSession: () => void;
   setSession: (sessionId: string, sessionData: SessionData) => void;
   reloadSession: () => void;
+  validateWithBackend: () => Promise<boolean>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -24,10 +26,43 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
-  const [loading, setLoading] = useState(true); // 1. เริ่มต้นให้ loading เป็น true
+  const [loading, setLoading] = useState(true);
+  const { socket } = useSocket();
 
-  // Function to load session from cookies
+  // Function to validate session with backend
+  const validateWithBackend = async (): Promise<boolean> => {
+    if (!sessionId) return false;
+
+    try {
+      const response = await fetch(`http://localhost:3000/sessions/${sessionId}/validate`);
+      const result = await response.json();
+
+      if (result.isValid) {
+        // Update session data with latest info from backend
+        if (result.session && result.session.expiresAt) {
+          const updatedSessionData = {
+            ...sessionData,
+            expiresAt: result.session.expiresAt
+          };
+          setSessionData(updatedSessionData);
+          cookieUtils.setCookie('customer_session_data', JSON.stringify(updatedSessionData), 1);
+        }
+        return true;
+      } else {
+        // Session is invalid on backend - clear local session
+        clearSession();
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to validate session with backend:', error);
+      // On network error, don't clear session - allow offline usage
+      return sessionId !== null;
+    }
+  };
+
+  // Function to load session from cookies (synchronous loading first)
   const loadSessionFromStorage = () => {
+    setLoading(true);
     try {
       const storedSessionId = cookieUtils.session.getSessionId();
       const storedSessionData = cookieUtils.getCookie('customer_session_data');
@@ -38,22 +73,55 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
           const now = new Date();
           const expiresAt = parsedData.expiresAt ? new Date(parsedData.expiresAt) : null;
 
-          if (!expiresAt || now < expiresAt) {
-            setSessionId(storedSessionId);
-            setSessionData(parsedData);
-          } else {
+          // Check local expiration first
+          if (expiresAt && now >= expiresAt) {
             clearSession();
+            setLoading(false);
+            return;
           }
+
+          // Set session data (locally valid)
+          setSessionId(storedSessionId);
+          setSessionData(parsedData);
+          setLoading(false);
+
+          // Validate with backend in the background (don't block UI)
+          validateSessionInBackground(storedSessionId, parsedData);
         } catch (error) {
           console.error('Failed to parse session data:', error);
           clearSession();
+          setLoading(false);
         }
       } else {
         setSessionId(null);
         setSessionData(null);
+        setLoading(false);
       }
-    } finally {
-      setLoading(false); // 2. เมื่อตรวจสอบเสร็จสิ้น ให้ loading เป็น false
+    } catch (error) {
+      console.error('Failed to load session:', error);
+      setLoading(false);
+    }
+  };
+
+  // Background validation function (doesn't block UI)
+  const validateSessionInBackground = async (sessionId: string, sessionData: SessionData) => {
+    try {
+      const response = await fetch(`http://localhost:3000/sessions/${sessionId}/validate`);
+      const result = await response.json();
+
+      if (!result.isValid) {
+        clearSession();
+      } else if (result.session && result.session.expiresAt) {
+        const updatedSessionData = {
+          ...sessionData,
+          expiresAt: result.session.expiresAt
+        };
+        setSessionData(updatedSessionData);
+        cookieUtils.setCookie('customer_session_data', JSON.stringify(updatedSessionData), 1);
+      }
+    } catch (error) {
+      console.error('Background session validation failed:', error);
+      // Don't clear session on network error
     }
   };
 
@@ -61,6 +129,49 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   useEffect(() => {
     loadSessionFromStorage();
   }, []);
+
+  // Listen to socket events for session invalidation
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSessionEnded = (data: any) => {
+      // If the ended session matches our current session, clear it
+      if (data.id === sessionId || (sessionData && data.tableId === sessionData.tableId)) {
+        clearSession();
+        // Show notification to user
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Session Ended', {
+            body: data.reason || 'Your session has been closed',
+            icon: '/favicon.ico',
+          });
+        }
+      }
+    };
+
+    const handleBillPaid = (data: any) => {
+      // When bill is paid, session gets closed - validate our session
+      if (sessionData && data.tableId === sessionData.tableId) {
+        // Just clear the session immediately since bill payment closes sessions
+        clearSession();
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Session Completed', {
+            body: 'Thank you for your payment! Your session has been completed.',
+            icon: '/favicon.ico',
+          });
+        }
+      }
+    };
+
+    // Add event listeners
+    socket.on('session_ended', handleSessionEnded);
+    socket.on('bill_paid', handleBillPaid);
+
+    // Cleanup event listeners
+    return () => {
+      socket.off('session_ended', handleSessionEnded);
+      socket.off('bill_paid', handleBillPaid);
+    };
+  }, [socket]); // Remove sessionId and sessionData from dependencies
 
   const setSession = (newSessionId: string, newSessionData: SessionData) => {
     setSessionId(newSessionId);
@@ -88,10 +199,11 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         sessionId,
         sessionData,
         hasValidSession,
-        loading, // 3. ส่ง loading state ไปให้คอมโพเนนต์อื่นใช้
+        loading,
         clearSession,
         setSession,
-        reloadSession
+        reloadSession,
+        validateWithBackend
       }}
     >
       {children}

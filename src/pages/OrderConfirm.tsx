@@ -8,7 +8,7 @@ import { useSession } from '../context/SessionContext';
 const OrderConfirmationPage = () => {
   const navigate = useNavigate();
   const { cart, cartCount, cartTotal, updateCartItem, removeFromCart, clearCart } = useCart();
-  const { sessionId, sessionData } = useSession();
+  const { sessionId, sessionData, validateWithBackend } = useSession();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
@@ -38,10 +38,18 @@ const OrderConfirmationPage = () => {
     setIsSubmittingOrder(true);
     setOrderError(null);
 
+    // First validate session with backend before submitting order
+    const isSessionValid = await validateWithBackend();
+    if (!isSessionValid) {
+      setOrderError('Your session has expired. Please scan the QR code again to continue.');
+      setIsSubmittingOrder(false);
+      return;
+    }
+
     try {
       const result = await orderService.submitOrder({
-        tableId: sessionData?.tableId || 1, // Use tableId from session
-        sessionId: sessionId || undefined, // Use current session ID
+        tableId: sessionData?.tableId || 1,
+        sessionId: sessionId || undefined,
         items: cart
       });
 

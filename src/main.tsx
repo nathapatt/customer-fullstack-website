@@ -16,8 +16,8 @@ import AdminQRGenerator from './pages/AdminQRGenerator.tsx'
 // const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
-    <SessionProvider>
-      <SocketProvider>
+    <SocketProvider>
+      <SessionProvider>
         <AppProvider>
           <Router>
             <Routes>
@@ -42,7 +42,7 @@ createRoot(document.getElementById('root')!).render(
             </Routes>
           </Router>
         </AppProvider>
-      </SocketProvider>
-    </SessionProvider>
+      </SessionProvider>
+    </SocketProvider>
   ,
 )
