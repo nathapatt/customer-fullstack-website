@@ -113,7 +113,6 @@ const MenuPage = () => {
       const orders = await apiService.getSessionOrders(sessionId);
       setOrderHistory(orders);
     } catch (error) {
-      console.error('Failed to load order history:', error);
       setOrderHistory([]);
     } finally {
       setLoadingOrderHistory(false);
@@ -130,7 +129,6 @@ const MenuPage = () => {
   // Join table room for real-time updates
   useEffect(() => {
     if (sessionData?.tableId && sessionId) {
-      console.log('Joining table room:', sessionData.tableId, 'with session:', sessionId);
       joinTable(sessionData.tableId, sessionId);
     }
   }, [sessionData?.tableId, sessionId, joinTable]);
@@ -138,7 +136,6 @@ const MenuPage = () => {
   // Listen for real-time order status updates
   useEffect(() => {
     const handleOrderCreated = (event: CustomEvent) => {
-      console.log('🆕 New order created:', event.detail);
       // Reload order history to show the new order
       if (sessionId) {
         loadOrderHistory();
@@ -146,7 +143,6 @@ const MenuPage = () => {
     };
 
     const handleOrderStatusUpdated = (event: CustomEvent) => {
-      console.log('📋 Order status updated:', event.detail);
       const updatedOrderData = event.detail;
 
       // Update the specific order in orderHistory state
@@ -185,7 +181,7 @@ const MenuPage = () => {
       });
       setQrCodeDataURL(qrDataURL);
     } catch (error) {
-      console.error('Failed to generate QR code:', error);
+      // QR code generation failed - will show loading state
     }
   };
 

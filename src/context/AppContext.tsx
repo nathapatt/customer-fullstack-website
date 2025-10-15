@@ -16,6 +16,8 @@ import karee from '../assets/foods/karee.jpg';
 import mhookrob from '../assets/foods/mhookrob.jpg';
 import mhoodang from '../assets/foods/mhoodang.jpg';
 
+import { useSession } from "./SessionContext"; // 1. Import useSession
+
 // Types
 interface MenuItem {
   id: number;
@@ -125,7 +127,7 @@ const getImageForMenuItem = (id: number, name: string): string => {
 const initialState: AppState = {
   cart: [],
   tableInfo: {
-    number: "A-12",
+    number: "A-",
     restaurant: "ครัวคุณยาย",
     capacity: 4,
     shareUrl: `${window.location.origin}/scan/table-A12-token-abc123`
@@ -216,8 +218,46 @@ const AppContext = createContext<{
 } | undefined>(undefined);
 
 // Provider
-export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AppProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const { sessionData } = useSession(); // 2. ดึงข้อมูล session มาใช้
+
+  // 3. เพิ่ม useEffect เพื่อ Sync ข้อมูลโต๊ะเมื่อ session พร้อมใช้งาน
+  useEffect(() => {
+    // สร้างฟังก์ชัน async เพื่อให้สามารถเรียก API ได้
+    const syncTableInfo = async () => {
+      // ตรวจสอบให้แน่ใจว่าเรามี tableId จาก session
+      if (sessionData?.tableId) {
+        try {
+          // 1. เรียก API getTable โดยใช้ tableId ที่เรามี
+          const tableDetails = await apiService.getTable(sessionData.tableId);
+
+          // 2. เมื่อได้ข้อมูลโต๊ะที่สมบูรณ์กลับมาแล้ว
+          if (tableDetails) {
+            dispatch({
+              type: "SET_TABLE_INFO",
+              payload: {
+                // 3. ใช้ tableNumber จาก API ที่ได้มาโดยตรง
+                number: `A-${tableDetails.tableNumber}`,
+                restaurant: "ครัวคุณยาย",
+                capacity: tableDetails.capacity || 4,
+                shareUrl: `${window.location.origin}/scan/${tableDetails.qrCodeToken}`,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch table details:", error);
+          // อาจจะมีการจัดการ error เพิ่มเติม เช่น แสดงข้อความบอกผู้ใช้
+        }
+      }
+    };
+
+    // เรียกใช้งานฟังก์ชันที่สร้างขึ้น
+    syncTableInfo();
+  }, [sessionData]); // ทำงานทุกครั้งที่ sessionData เปลี่ยนแปลง
+
 
   // Fetch menu items from backend on mount
   useEffect(() => {
