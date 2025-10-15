@@ -264,6 +264,17 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         window.dispatchEvent(new CustomEvent('systemMessage', { detail: data }));
       });
 
+      // Table status events
+      socket.on('table_status_changed', (data) => {
+        // Handle table status change - might affect current session
+        window.dispatchEvent(new CustomEvent('tableStatusChanged', { detail: data }));
+      });
+
+      socket.on('session_ended', (data) => {
+        // Handle session ended - this might affect the current customer's session
+        window.dispatchEvent(new CustomEvent('sessionEnded', { detail: data }));
+      });
+
       // Error handler
       socket.on('error', (data) => {
         console.error('Socket error:', data.message || 'Unknown error');
