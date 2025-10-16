@@ -1,12 +1,28 @@
-import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, Menu, ShoppingCart, Users, QrCode, X, Copy, Check, Plus, Minus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useAppContext, getImageForMenuItem, type MenuItem } from '../context/AppContext';
-import { useCart } from '../hooks/useCart';
-import { useSession } from '../context/SessionContext';
-import { useSocket } from '../contexts/SocketContext';
-import { apiService, type BackendOrder } from '../services/api';
-import QRCode from 'qrcode';
+import { useState, useRef, useEffect } from "react";
+import {
+  Search,
+  Bell,
+  Menu,
+  ShoppingCart,
+  Users,
+  QrCode,
+  X,
+  Copy,
+  Check,
+  Plus,
+  Minus,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  useAppContext,
+  getImageForMenuItem,
+  type MenuItem,
+} from "../context/AppContext";
+import { useCart } from "../hooks/useCart";
+import { useSession } from "../context/SessionContext";
+import { useSocket } from "../contexts/SocketContext";
+import { apiService, type BackendOrder } from "../services/api";
+import QRCode from "qrcode";
 
 const MenuPage = () => {
   const { state, dispatch } = useAppContext();
@@ -18,86 +34,97 @@ const MenuPage = () => {
   const [showQRModal, setShowQRModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('เมนูขายดี');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("ข้าว");
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [isClosingOrderHistory, setIsClosingOrderHistory] = useState(false);
-  const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
+  const [qrCodeDataURL, setQrCodeDataURL] = useState<string>("");
   const [orderHistory, setOrderHistory] = useState<BackendOrder[]>([]);
   const [loadingOrderHistory, setLoadingOrderHistory] = useState(false);
 
   // Refs for scrolling to sections
   const sectionRefs = {
-    'เมนูขายดี': useRef<HTMLDivElement>(null),
-    'ข้าว': useRef<HTMLDivElement>(null),
-    'ก๋วยเตี๋ยว': useRef<HTMLDivElement>(null),
-    'น้ำ': useRef<HTMLDivElement>(null),
-    'ของหวาน': useRef<HTMLDivElement>(null)
+    ข้าว: useRef<HTMLDivElement>(null),
+    ก๋วยเตี๋ยว: useRef<HTMLDivElement>(null),
+    น้ำ: useRef<HTMLDivElement>(null),
+    ของหวาน: useRef<HTMLDivElement>(null),
   };
 
-  const categories = ['เมนูขายดี', 'ข้าว', 'ก๋วยเตี๋ยว', 'น้ำ', 'ของหวาน'];
+  const categories = ["ข้าว", "ก๋วยเตี๋ยว", "น้ำ", "ของหวาน"];
 
   const getCategoryForItem = (item: any) => {
     // Use foodtype from backend data if available
     if (item.foodtype) {
       switch (item.foodtype) {
-        case 'RICE':
-          return 'ข้าว';
-        case 'NOODLE':
-          return 'ก๋วยเตี๋ยว';
-        case 'DRINK':
-          return 'น้ำ';
-        case 'DESSERT':
-          return 'ของหวาน';
-        // Legacy support for old names
-        case 'Main Course':
-          return 'ข้าว';
-        case 'Noodle':
-          return 'ก๋วยเตี๋ยว';
-        case 'Beverage':
-          return 'น้ำ';
-        case 'Dessert':
-          return 'ของหวาน';
+        case "RICE":
+          return "ข้าว";
+        case "NOODLE":
+          return "ก๋วยเตี๋ยว";
+        case "DRINK":
+          return "น้ำ";
+        case "DESSERT":
+          return "ของหวาน";
         default:
-          return 'เมนูขายดี';
+          return "ข้าว";
       }
     }
 
     // Fallback to name-based categorization for backward compatibility
     const name = item.name.toLowerCase();
-    if (name.includes('curry') || name.includes('stir fry') || name.includes('rice') || name.includes('ข้าว')) return 'ข้าว';
-    if (name.includes('noodle') || name.includes('soup') || name.includes('ก๋วยเตี๋ยว')) return 'ก๋วยเตี๋ยว';
-    if (name.includes('tea') || name.includes('drink') || name.includes('beverage') || name.includes('water') || name.includes('น้ำ')) return 'น้ำ';
-    if (name.includes('mango') || name.includes('dessert') || name.includes('sweet') || name.includes('ice cream') || name.includes('ของหวาน')) return 'ของหวาน';
+    if (
+      name.includes("curry") ||
+      name.includes("stir fry") ||
+      name.includes("rice") ||
+      name.includes("ข้าว")
+    )
+      return "ข้าว";
+    if (
+      name.includes("noodle") ||
+      name.includes("soup") ||
+      name.includes("ก๋วยเตี๋ยว")
+    )
+      return "ก๋วยเตี๋ยว";
+    if (
+      name.includes("tea") ||
+      name.includes("drink") ||
+      name.includes("beverage") ||
+      name.includes("water") ||
+      name.includes("น้ำ")
+    )
+      return "น้ำ";
+    if (
+      name.includes("mango") ||
+      name.includes("dessert") ||
+      name.includes("sweet") ||
+      name.includes("ice cream") ||
+      name.includes("ของหวาน")
+    )
+      return "ของหวาน";
 
-    return 'เมนูขายดี';
+    return "เมนูขายดี";
   };
 
   const getItemQuantityInCart = (itemId: number) => {
-    const cartItem = cart.find(item => item.id === itemId);
+    const cartItem = cart.find((item) => item.id === itemId);
     return cartItem ? cartItem.quantity : 0;
   };
 
   const filteredMenuItems = searchQuery
-    ? state.menuItems.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    ? state.menuItems.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : state.menuItems; // Show all items when not searching
-
-  // Popular menu items (one from each category)
-  const popularItemIds = [1, 6, 10, 14]; // Thai Basil Pork Rice, Pad Thai, Thai Iced Tea, Mango Sticky Rice
 
   // Group items by category
   const groupedMenuItems = categories.reduce((acc, category) => {
     let categoryItems;
-    if (category === 'เมนูขายดี') {
-      // Popular menu shows only 4 specific items
-      categoryItems = filteredMenuItems.filter(item => popularItemIds.includes(item.id));
-    } else {
-      // Other categories show items that belong to their category
-      categoryItems = filteredMenuItems.filter(item => getCategoryForItem(item) === category);
-    }
+    // Other categories show items that belong to their category
+    categoryItems = filteredMenuItems.filter(
+      (item) => getCategoryForItem(item) === category
+    );
+
     if (categoryItems.length > 0) {
       acc[category] = categoryItems;
     }
@@ -146,25 +173,42 @@ const MenuPage = () => {
       const updatedOrderData = event.detail;
 
       // Update the specific order in orderHistory state
-      setOrderHistory(prev => prev.map(order => {
-        if (order.id === updatedOrderData.orderId || order.id === updatedOrderData.id) {
-          return {
-            ...order,
-            status: updatedOrderData.status
-          };
-        }
-        return order;
-      }));
+      setOrderHistory((prev) =>
+        prev.map((order) => {
+          if (
+            order.id === updatedOrderData.orderId ||
+            order.id === updatedOrderData.id
+          ) {
+            return {
+              ...order,
+              status: updatedOrderData.status,
+            };
+          }
+          return order;
+        })
+      );
     };
 
     // Add event listeners
-    window.addEventListener('orderCreated', handleOrderCreated as EventListener);
-    window.addEventListener('orderStatusUpdated', handleOrderStatusUpdated as EventListener);
+    window.addEventListener(
+      "orderCreated",
+      handleOrderCreated as EventListener
+    );
+    window.addEventListener(
+      "orderStatusUpdated",
+      handleOrderStatusUpdated as EventListener
+    );
 
     // Cleanup
     return () => {
-      window.removeEventListener('orderCreated', handleOrderCreated as EventListener);
-      window.removeEventListener('orderStatusUpdated', handleOrderStatusUpdated as EventListener);
+      window.removeEventListener(
+        "orderCreated",
+        handleOrderCreated as EventListener
+      );
+      window.removeEventListener(
+        "orderStatusUpdated",
+        handleOrderStatusUpdated as EventListener
+      );
     };
   }, [sessionId]);
 
@@ -175,9 +219,9 @@ const MenuPage = () => {
         width: 192,
         margin: 2,
         color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
       });
       setQrCodeDataURL(qrDataURL);
     } catch (error) {
@@ -191,7 +235,6 @@ const MenuPage = () => {
       generateQRCode(state.tableInfo.shareUrl);
     }
   }, [state.tableInfo.shareUrl]);
-
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(state.tableInfo.shareUrl);
@@ -233,8 +276,12 @@ const MenuPage = () => {
               <span className="text-white font-bold text-lg">A</span>
             </div>
             <div>
-              <h1 className="font-semibold text-gray-900">โต๊ะ {state.tableInfo.number}</h1>
-              <p className="text-sm text-gray-600">{state.tableInfo.restaurant}</p>
+              <h1 className="font-semibold text-gray-900">
+                โต๊ะ {state.tableInfo.number}
+              </h1>
+              <p className="text-sm text-gray-600">
+                {state.tableInfo.restaurant}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -284,18 +331,19 @@ const MenuPage = () => {
                 onClick={() => {
                   setActiveTab(category);
                   // Scroll to section
-                  const sectionRef = sectionRefs[category as keyof typeof sectionRefs];
+                  const sectionRef =
+                    sectionRefs[category as keyof typeof sectionRefs];
                   if (sectionRef.current) {
                     sectionRef.current.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'start'
+                      behavior: "smooth",
+                      block: "start",
                     });
                   }
                 }}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                   activeTab === category
-                    ? 'bg-cyan-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? "bg-cyan-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 {category}
@@ -334,7 +382,10 @@ const MenuPage = () => {
       {!searchQuery && !state.loading ? (
         <div className="space-y-6">
           {Object.entries(groupedMenuItems).map(([category, items]) => (
-            <div key={category} ref={sectionRefs[category as keyof typeof sectionRefs]}>
+            <div
+              key={category}
+              ref={sectionRefs[category as keyof typeof sectionRefs]}
+            >
               {/* Category Title */}
               <div className="px-4 py-4 bg-white border-b border-gray-100">
                 <h2 className="text-xl font-bold text-gray-900">{category}</h2>
@@ -343,8 +394,11 @@ const MenuPage = () => {
               {/* Items in Category */}
               <div className="bg-white">
                 <div className="divide-y divide-gray-100">
-                  {items.map(item => (
-                    <div key={item.id} className="px-4 py-4 hover:bg-gray-50 transition-colors">
+                  {items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="px-4 py-4 hover:bg-gray-50 transition-colors"
+                    >
                       <Link to={`/food/${item.id}`} className="flex gap-4">
                         {/* Food Image */}
                         <div className="w-20 h-20 flex-shrink-0">
@@ -355,8 +409,14 @@ const MenuPage = () => {
                             onError={(e) => {
                               // Fallback to local image if Cloudinary URL fails
                               const target = e.target as HTMLImageElement;
-                              if (target.src !== getImageForMenuItem(item.id, item.name)) {
-                                target.src = getImageForMenuItem(item.id, item.name);
+                              if (
+                                target.src !==
+                                getImageForMenuItem(item.id, item.name)
+                              ) {
+                                target.src = getImageForMenuItem(
+                                  item.id,
+                                  item.name
+                                );
                               }
                             }}
                           />
@@ -382,7 +442,9 @@ const MenuPage = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
-                                    const currentQty = getItemQuantityInCart(item.id);
+                                    const currentQty = getItemQuantityInCart(
+                                      item.id
+                                    );
                                     if (currentQty > 1) {
                                       updateCartItem(item.id, currentQty - 1);
                                     } else {
@@ -400,7 +462,9 @@ const MenuPage = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
-                                    const currentQty = getItemQuantityInCart(item.id);
+                                    const currentQty = getItemQuantityInCart(
+                                      item.id
+                                    );
                                     updateCartItem(item.id, currentQty + 1);
                                   }}
                                   className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
@@ -416,7 +480,7 @@ const MenuPage = () => {
                                   const cartItem = {
                                     ...item,
                                     quantity: 1,
-                                    note: ''
+                                    note: "",
                                   };
                                   addToCart(cartItem);
                                 }}
@@ -437,11 +501,15 @@ const MenuPage = () => {
         </div>
       ) : (
         /* Search Results */
-        filteredMenuItems.length > 0 && !state.loading && (
+        filteredMenuItems.length > 0 &&
+        !state.loading && (
           <div className="bg-white">
             <div className="divide-y divide-gray-100">
-              {filteredMenuItems.map(item => (
-                <div key={item.id} className="px-4 py-4 hover:bg-gray-50 transition-colors">
+              {filteredMenuItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="px-4 py-4 hover:bg-gray-50 transition-colors"
+                >
                   <Link to={`/food/${item.id}`} className="flex gap-4">
                     {/* Food Image */}
                     <div className="w-20 h-20 flex-shrink-0">
@@ -452,8 +520,14 @@ const MenuPage = () => {
                         onError={(e) => {
                           // Fallback to local image if Cloudinary URL fails
                           const target = e.target as HTMLImageElement;
-                          if (target.src !== getImageForMenuItem(item.id, item.name)) {
-                            target.src = getImageForMenuItem(item.id, item.name);
+                          if (
+                            target.src !==
+                            getImageForMenuItem(item.id, item.name)
+                          ) {
+                            target.src = getImageForMenuItem(
+                              item.id,
+                              item.name
+                            );
                           }
                         }}
                       />
@@ -479,7 +553,9 @@ const MenuPage = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                const currentQty = getItemQuantityInCart(item.id);
+                                const currentQty = getItemQuantityInCart(
+                                  item.id
+                                );
                                 if (currentQty > 1) {
                                   updateCartItem(item.id, currentQty - 1);
                                 } else {
@@ -497,7 +573,9 @@ const MenuPage = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                const currentQty = getItemQuantityInCart(item.id);
+                                const currentQty = getItemQuantityInCart(
+                                  item.id
+                                );
                                 updateCartItem(item.id, currentQty + 1);
                               }}
                               className="bg-gray-100 hover:bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
@@ -513,7 +591,7 @@ const MenuPage = () => {
                               const cartItem = {
                                 ...item,
                                 quantity: 1,
-                                note: ''
+                                note: "",
                               };
                               addToCart(cartItem);
                             }}
@@ -534,23 +612,29 @@ const MenuPage = () => {
 
       {/* Floating Menu Button */}
       {cartCount > 0 ? (
-         <div className="fixed bottom-18 z-20 animate-slideUpFromBottom" style={{ right: 'max(0.75rem, calc(50vw - 180px + 0.75rem))' }}>
-        <button
-          onClick={() => setShowCart(!showCart)}
-          className="bg-cyan-500 hover:bg-cyan-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all"
+        <div
+          className="fixed bottom-18 z-20 animate-slideUpFromBottom"
+          style={{ right: "max(0.75rem, calc(50vw - 180px + 0.75rem))" }}
         >
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
+          <button
+            onClick={() => setShowCart(!showCart)}
+            className="bg-cyan-500 hover:bg-cyan-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
       ) : (
-         <div className="fixed bottom-5 z-20" style={{ right: 'max(0.75rem, calc(50vw - 180px + 0.75rem))' }}>
-        <button
-          onClick={() => setShowCart(!showCart)}
-          className="bg-cyan-500 hover:bg-cyan-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all"
+        <div
+          className="fixed bottom-5 z-20"
+          style={{ right: "max(0.75rem, calc(50vw - 180px + 0.75rem))" }}
         >
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
+          <button
+            onClick={() => setShowCart(!showCart)}
+            className="bg-cyan-500 hover:bg-cyan-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
       )}
 
       {/* Bottom Cart Bar */}
@@ -578,21 +662,23 @@ const MenuPage = () => {
       {showCart && (
         <div
           className={`fixed inset-0 modal-backdrop z-[9999] flex items-end ${
-            isClosingCart ? 'animate-fadeOut' : 'animate-fadeIn'
+            isClosingCart ? "animate-fadeOut" : "animate-fadeIn"
           }`}
           onClick={handleCloseCart}
         >
           <div
             className={`bg-white w-full max-w-md mx-auto rounded-t-2xl max-h-[80vh] overflow-hidden shadow-2xl ${
               isClosingCart
-                ? 'animate-slideDownToBottom'
-                : 'animate-slideUpFromBottom'
+                ? "animate-slideDownToBottom"
+                : "animate-slideUpFromBottom"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">รายการที่สั่ง</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  รายการที่สั่ง
+                </h3>
                 <button
                   onClick={handleCloseCart}
                   className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -605,11 +691,18 @@ const MenuPage = () => {
             <div className="p-4 max-h-96 overflow-y-auto">
               {cart.length > 0 ? (
                 <div className="space-y-3">
-                  {cart.map(item => (
-                    <div key={item.id} className="flex items-center justify-between py-2">
+                  {cart.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between py-2"
+                    >
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{item.name}</h4>
-                        <p className="text-sm text-gray-600">฿{item.price} x {item.quantity}</p>
+                        <h4 className="font-medium text-gray-900">
+                          {item.name}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          ฿{item.price} x {item.quantity}
+                        </p>
                       </div>
                       <span className="font-semibold text-gray-900">
                         ฿{item.price * item.quantity}
@@ -624,7 +717,9 @@ const MenuPage = () => {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">ยังไม่มีรายการอาหาร</p>
+                <p className="text-gray-500 text-center py-8">
+                  ยังไม่มีรายการอาหาร
+                </p>
               )}
             </div>
 
@@ -646,15 +741,15 @@ const MenuPage = () => {
       {showQRModal && (
         <div
           className={`fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-[9999] ${
-            isClosing ? 'animate-fadeOut' : 'animate-fadeIn'
+            isClosing ? "animate-fadeOut" : "animate-fadeIn"
           }`}
           onClick={handleCloseModal}
         >
           <div
             className={`bg-white rounded-3xl p-6 w-full max-w-sm relative transform transition-all duration-300 shadow-2xl border border-gray-100 ${
               isClosing
-                ? 'animate-slideDown scale-95 opacity-0'
-                : 'animate-slideUp scale-100 opacity-100'
+                ? "animate-slideDown scale-95 opacity-0"
+                : "animate-slideUp scale-100 opacity-100"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -729,21 +824,23 @@ const MenuPage = () => {
       {showOrderHistory && (
         <div
           className={`fixed inset-0 modal-backdrop z-[9999] flex items-end ${
-            isClosingOrderHistory ? 'animate-fadeOut' : 'animate-fadeIn'
+            isClosingOrderHistory ? "animate-fadeOut" : "animate-fadeIn"
           }`}
           onClick={handleCloseOrderHistory}
         >
           <div
             className={`bg-white w-full max-w-md mx-auto rounded-t-2xl max-h-[80vh] overflow-hidden shadow-2xl ${
               isClosingOrderHistory
-                ? 'animate-slideDownToBottom'
-                : 'animate-slideUpFromBottom'
+                ? "animate-slideDownToBottom"
+                : "animate-slideUpFromBottom"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">ประวัติการสั่งอาหาร</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  ประวัติการสั่งอาหาร
+                </h3>
                 <button
                   onClick={handleCloseOrderHistory}
                   className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -757,60 +854,88 @@ const MenuPage = () => {
               {loadingOrderHistory ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-                  <p className="text-gray-500">กำลังโหลดประวัติการสั่งอาหาร...</p>
+                  <p className="text-gray-500">
+                    กำลังโหลดประวัติการสั่งอาหาร...
+                  </p>
                 </div>
               ) : orderHistory.length > 0 ? (
                 <>
                   <div className="space-y-4">
-                    {orderHistory.map(order => {
+                    {orderHistory.map((order) => {
                       // Calculate total for this order
-                      const orderTotal = order.orderItems.reduce((total, item) => {
-                        return total + (item.menuItem.price * item.quantity);
-                      }, 0);
+                      const orderTotal = order.orderItems.reduce(
+                        (total, item) => {
+                          return total + item.menuItem.price * item.quantity;
+                        },
+                        0
+                      );
 
                       // Convert status to Thai
                       const getStatusText = (status: string) => {
                         switch (status) {
-                          case 'PENDING': return 'รอดำเนินการ';
-                          case 'IN_PROGRESS': return 'กำลังทำ';
-                          case 'DONE': return 'เสร็จแล้ว';
-                          case 'CANCELLED': return 'ยกเลิก';
-                          default: return status;
+                          case "PENDING":
+                            return "รอดำเนินการ";
+                          case "IN_PROGRESS":
+                            return "กำลังทำ";
+                          case "DONE":
+                            return "เสร็จแล้ว";
+                          case "CANCELLED":
+                            return "ยกเลิก";
+                          default:
+                            return status;
                         }
                       };
 
                       const getStatusColor = (status: string) => {
                         switch (status) {
-                          case 'DONE': return 'bg-green-100 text-green-700';
-                          case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
-                          case 'PENDING': return 'bg-orange-100 text-orange-700';
-                          case 'CANCELLED': return 'bg-red-100 text-red-700';
-                          default: return 'bg-gray-100 text-gray-700';
+                          case "DONE":
+                            return "bg-green-100 text-green-700";
+                          case "IN_PROGRESS":
+                            return "bg-blue-100 text-blue-700";
+                          case "PENDING":
+                            return "bg-orange-100 text-orange-700";
+                          case "CANCELLED":
+                            return "bg-red-100 text-red-700";
+                          default:
+                            return "bg-gray-100 text-gray-700";
                         }
                       };
 
                       return (
-                        <div key={order.id} className="border border-gray-200 rounded-lg p-4">
+                        <div
+                          key={order.id}
+                          className="border border-gray-200 rounded-lg p-4"
+                        >
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-gray-900">
                                 ออเดอร์ #{order.id}
                               </span>
                               <span className="text-sm text-gray-500">
-                                {new Date(order.createdAt).toLocaleTimeString('th-TH', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
+                                {new Date(order.createdAt).toLocaleTimeString(
+                                  "th-TH",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
                               </span>
                             </div>
-                            <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                                order.status
+                              )}`}
+                            >
                               {getStatusText(order.status)}
                             </span>
                           </div>
 
                           <div className="space-y-2 mb-3">
                             {order.orderItems.map((item) => (
-                              <div key={item.id} className="flex justify-between text-sm">
+                              <div
+                                key={item.id}
+                                className="flex justify-between text-sm"
+                              >
                                 <div className="flex-1">
                                   <span className="text-gray-700">
                                     {item.menuItem.name} x{item.quantity}
@@ -822,7 +947,10 @@ const MenuPage = () => {
                                   )}
                                 </div>
                                 <span className="text-gray-900 font-medium">
-                                  ฿{(item.menuItem.price * item.quantity).toFixed(2)}
+                                  ฿
+                                  {(
+                                    item.menuItem.price * item.quantity
+                                  ).toFixed(2)}
                                 </span>
                               </div>
                             ))}
@@ -846,12 +974,20 @@ const MenuPage = () => {
                         ยอดรวมทั้งหมด
                       </span>
                       <span className="text-xl font-bold text-cyan-900">
-                        ฿{orderHistory.reduce((grandTotal, order) => {
-                          const orderTotal = order.orderItems.reduce((total, item) => {
-                            return total + (item.menuItem.price * item.quantity);
-                          }, 0);
-                          return grandTotal + orderTotal;
-                        }, 0).toFixed(2)}
+                        ฿
+                        {orderHistory
+                          .reduce((grandTotal, order) => {
+                            const orderTotal = order.orderItems.reduce(
+                              (total, item) => {
+                                return (
+                                  total + item.menuItem.price * item.quantity
+                                );
+                              },
+                              0
+                            );
+                            return grandTotal + orderTotal;
+                          }, 0)
+                          .toFixed(2)}
                       </span>
                     </div>
                     <p className="text-sm text-cyan-700 mt-1">
@@ -859,9 +995,10 @@ const MenuPage = () => {
                     </p>
                   </div>
                 </>
-
               ) : (
-                <p className="text-gray-500 text-center py-8">ยังไม่มีประวัติการสั่งอาหาร</p>
+                <p className="text-gray-500 text-center py-8">
+                  ยังไม่มีประวัติการสั่งอาหาร
+                </p>
               )}
             </div>
           </div>

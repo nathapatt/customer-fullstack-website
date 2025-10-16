@@ -5,7 +5,7 @@ import React, {
   useEffect,
   type ReactNode,
 } from "react";
-import { apiService, convertBackendMenuItemToFrontend } from "../services/api";
+import { apiService } from "../services/api";
 import rarefish from "../assets/foods/rarefish.jpg";
 import noodle from "../assets/foods/noodle.jpg";
 import mangosticky from "../assets/foods/mangosticky.jpg";
