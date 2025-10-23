@@ -43,7 +43,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:3000/sessions/${sessionId}/validate`
+        `${process.env.NGINX_PROXY}/sessions/${sessionId}/validate`
       );
       const result = await response.json();
 
@@ -129,7 +129,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/sessions/${sessionId}/validate`
+        `${process.env.NGINX_PROXY}/sessions/${sessionId}/validate`
       );
       const result = await response.json();
 
