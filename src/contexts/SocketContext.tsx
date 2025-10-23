@@ -78,7 +78,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     setConnecting(true);
 
-    const newSocket = io(`${process.env.VITE_NGINX_PROXY}`, {
+    const newSocket = io(`${import.meta.env.VITE_NGINX_PROXY}`, {
       withCredentials: true,
       transports: ["websocket", "polling"],
       autoConnect: true,

@@ -5,6 +5,7 @@ services:
     container_name: food_ordering_customer_frontend
     environment:
       - NGINX_PROXY=${NGINX_PROXY}
+      - VITE_NGINX_PROXY=${VITE_NGINX_PROXY}
     ports:
       - '${PORT}:80'
     networks:
