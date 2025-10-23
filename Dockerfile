@@ -1,26 +1,29 @@
 # Multi-stage build for Customer Frontend (React + Vite + Tailwind)
 FROM node:18-alpine AS base
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Install dependencies only when needed
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-RUN npm ci
+COPY package*.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 
 # Builder stage
 FROM base AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY package*.json pnpm-lock.yaml ./
 COPY . .
 
 # Install dependencies
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Production stage - Use nginx to serve static files
 FROM nginx:alpine AS runner
@@ -28,8 +31,8 @@ FROM nginx:alpine AS runner
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy custom nginx configuration to app directory
+COPY nginx.conf /app/nginx.conf.template
 
 # Create a non-root user
 RUN addgroup -g 1001 -S nodejs
@@ -40,6 +43,7 @@ RUN chown -R nextjs:nodejs /usr/share/nginx/html
 RUN chown -R nextjs:nodejs /var/cache/nginx
 RUN chown -R nextjs:nodejs /var/log/nginx
 RUN chown -R nextjs:nodejs /etc/nginx/conf.d
+RUN chown -R nextjs:nodejs /app
 RUN touch /var/run/nginx.pid
 RUN chown -R nextjs:nodejs /var/run/nginx.pid
 
@@ -52,5 +56,5 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start with environment variable substitution in user-writable location
+CMD ["sh", "-c", "envsubst '$NGINX_PROXY' < /app/nginx.conf.template > /app/nginx.conf && nginx -c /app/nginx.conf -g 'daemon off;'"]
