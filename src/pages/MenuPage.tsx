@@ -373,7 +373,7 @@ const MenuPage = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1">
                               <span className="text-lg font-bold text-gray-900">
-                                ฿ {item.price}
+                                ฿ {item.price.toFixed(2)}
                               </span>
                             </div>
                             {getItemQuantityInCart(item.id) > 0 ? (
@@ -470,7 +470,7 @@ const MenuPage = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1">
                           <span className="text-lg font-bold text-gray-900">
-                            ฿ {item.price}
+                            ฿ {item.price.toFixed(2)}
                           </span>
                         </div>
                         {getItemQuantityInCart(item.id) > 0 ? (
@@ -565,7 +565,7 @@ const MenuPage = () => {
               <span className="font-medium">รายการที่สั่งทั้งหมด</span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-lg font-bold">฿{cartTotal}</span>
+              <span className="text-lg font-bold">฿{cartTotal.toFixed(2)}</span>
               <span className="bg-white text-cyan-500 px-2 py-1 rounded-full text-sm font-bold">
                 {cartCount}
               </span>
@@ -609,17 +609,17 @@ const MenuPage = () => {
                     <div key={item.id} className="flex items-center justify-between py-2">
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900">{item.name}</h4>
-                        <p className="text-sm text-gray-600">฿{item.price} x {item.quantity}</p>
+                        <p className="text-sm text-gray-600">฿{item.price.toFixed(2)} x {item.quantity}</p>
                       </div>
-                      <span className="font-semibold text-gray-900">
-                        ฿{item.price * item.quantity}
-                      </span>
+                    <span className="font-semibold text-gray-900">
+                      ฿{(item.price * item.quantity).toFixed(2)}
+                    </span>
                     </div>
                   ))}
                   <div className="border-t border-gray-200 pt-3 mt-4">
                     <div className="flex items-center justify-between text-lg font-bold">
                       <span>รวมทั้งหมด</span>
-                      <span>฿{cartTotal}</span>
+                      <span>฿{cartTotal.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
