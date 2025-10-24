@@ -19,7 +19,7 @@ const MenuPage = () => {
   const [isClosing, setIsClosing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('เมนูขายดี');
+  const [activeTab, setActiveTab] = useState('ข้าว');
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [isClosingOrderHistory, setIsClosingOrderHistory] = useState(false);
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
@@ -28,14 +28,13 @@ const MenuPage = () => {
 
   // Refs for scrolling to sections
   const sectionRefs = {
-    'เมนูขายดี': useRef<HTMLDivElement>(null),
     'ข้าว': useRef<HTMLDivElement>(null),
     'ก๋วยเตี๋ยว': useRef<HTMLDivElement>(null),
     'น้ำ': useRef<HTMLDivElement>(null),
     'ของหวาน': useRef<HTMLDivElement>(null)
   };
 
-  const categories = ['เมนูขายดี', 'ข้าว', 'ก๋วยเตี๋ยว', 'น้ำ', 'ของหวาน'];
+  const categories = ['ข้าว', 'ก๋วยเตี๋ยว', 'น้ำ', 'ของหวาน'];
 
   const getCategoryForItem = (item: any) => {
     // Use foodtype from backend data if available
@@ -49,17 +48,8 @@ const MenuPage = () => {
           return 'น้ำ';
         case 'DESSERT':
           return 'ของหวาน';
-        // Legacy support for old names
-        case 'Main Course':
-          return 'ข้าว';
-        case 'Noodle':
-          return 'ก๋วยเตี๋ยว';
-        case 'Beverage':
-          return 'น้ำ';
-        case 'Dessert':
-          return 'ของหวาน';
         default:
-          return 'เมนูขายดี';
+          return 'ข้าว';
       }
     }
 
@@ -70,7 +60,7 @@ const MenuPage = () => {
     if (name.includes('tea') || name.includes('drink') || name.includes('beverage') || name.includes('water') || name.includes('น้ำ')) return 'น้ำ';
     if (name.includes('mango') || name.includes('dessert') || name.includes('sweet') || name.includes('ice cream') || name.includes('ของหวาน')) return 'ของหวาน';
 
-    return 'เมนูขายดี';
+    return 'ข้าว';
   };
 
   const getItemQuantityInCart = (itemId: number) => {
@@ -85,19 +75,11 @@ const MenuPage = () => {
       )
     : state.menuItems; // Show all items when not searching
 
-  // Popular menu items (one from each category)
-  const popularItemIds = [1, 6, 10, 14]; // Thai Basil Pork Rice, Pad Thai, Thai Iced Tea, Mango Sticky Rice
-
   // Group items by category
   const groupedMenuItems = categories.reduce((acc, category) => {
-    let categoryItems;
-    if (category === 'เมนูขายดี') {
-      // Popular menu shows only 4 specific items
-      categoryItems = filteredMenuItems.filter(item => popularItemIds.includes(item.id));
-    } else {
-      // Other categories show items that belong to their category
-      categoryItems = filteredMenuItems.filter(item => getCategoryForItem(item) === category);
-    }
+    // Other categories show items that belong to their category
+    const categoryItems = filteredMenuItems.filter(item => getCategoryForItem(item) === category);
+    
     if (categoryItems.length > 0) {
       acc[category] = categoryItems;
     }
