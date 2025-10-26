@@ -1,6 +1,6 @@
-# 🍽️ Thai Restaurant QR Order System
+# 🍽️ Customer Ordering Frontend
 
-A modern, mobile-first restaurant ordering system built with React, TypeScript, and Tailwind CSS. Customers can scan QR codes at tables to browse menus, place orders, and track their dining experience.
+A modern, mobile-first restaurant ordering system built with React, TypeScript, and Tailwind CSS. This is the customer-facing application where diners can scan QR codes at tables to browse menus, place orders, and track their dining experience in real-time.
 
 ## ✨ Features
 
@@ -44,8 +44,11 @@ A modern, mobile-first restaurant ordering system built with React, TypeScript, 
 - **Build Tool**: Vite with HMR
 - **State Management**: React Context API + useReducer
 - **Routing**: React Router DOM v7
+- **Real-time**: Socket.io Client for live order updates
+- **HTTP Client**: React Query for data fetching
 - **Icons**: Lucide React
-- **Images**: Unsplash integration
+- **QR Code**: QR Code generator for table sharing
+- **Images**: Integration with backend API for menu images
 
 ## 📱 Pages & Components
 
@@ -101,14 +104,23 @@ Navigate to `http://localhost:5173`
 ```
 src/
 ├── components/          # Reusable UI components
+│   ├── Modal.tsx       # Modal system for overlays
+│   ├── ProtectedRoute.tsx # Route protection
+│   └── ...             # Other shared components
 ├── context/
-│   └── AppContext.tsx  # Global state management
+│   ├── AppContext.tsx  # Global state management
+│   └── SessionContext.tsx # Table session management
+├── contexts/
+│   └── SocketContext.tsx # Socket.io connection
 ├── hooks/
 │   └── useCart.ts      # Cart management logic
 ├── pages/
 │   ├── MenuPage.tsx    # Main menu with categories
 │   ├── Details.tsx     # Food customization
-│   └── OrderConfirm.tsx # Order review
+│   ├── OrderConfirm.tsx # Order review
+│   ├── QRScanner.tsx   # QR code scanning interface
+│   ├── OrderHistory.tsx # Order tracking
+│   └── AdminQR.tsx     # Development QR access
 ├── main.tsx            # App entry point with routing
 └── index.css           # Custom animations + Tailwind
 ```
@@ -148,16 +160,39 @@ Sample menu includes:
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 
+### **API Integration**
+- **Backend URL**: Configurable via environment variables
+- **Socket.io**: Real-time connection for order updates
+- **Session Management**: QR code-based table sessions
+- **Menu API**: Dynamic menu fetching from backend
+- **Order API**: Real-time order placement and tracking
+
 ### **Key Features to Extend**
 - Payment integration
-- Real-time order tracking
-- Kitchen dashboard integration
 - Multi-language support
 - Offline capability
+- Push notifications
+- Customer loyalty system
+
+## 🔧 Environment Variables
+
+Create a `.env` file in the root directory:
+
+```bash
+VITE_API_URL=http://localhost:3000
+VITE_SOCKET_URL=http://localhost:3000
+```
+
+## 🚀 Development Routes
+
+- **Main Menu**: `/` - Landing page with QR scanner
+- **Table Menu**: `/table/:sessionId` - Menu for specific table session
+- **Order History**: `/orders` - Customer order tracking
+- **Admin QR**: `/admin/qr` - Development table selection (bypass QR scanning)
 
 ## 📄 License
 
-This project is part of a university full-stack development course.
+This project is part of a university full-stack development course (Group 12).
 
 ---
 
